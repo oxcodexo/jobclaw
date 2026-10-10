@@ -1,0 +1,11 @@
+# OpenClaw gateway + headless Chromium for agent browsing (job boards are JS-heavy).
+# Rebuild after upstream updates: docker compose up -d --build openclaw-gateway
+FROM ghcr.io/openclaw/openclaw:latest
+
+USER root
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends chromium \
+  && rm -rf /var/lib/apt/lists/* \
+  && which chromium
+
+USER node

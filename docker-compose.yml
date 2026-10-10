@@ -1,0 +1,86 @@
+name: work-agent-finder
+
+# OpenClaw Gateway + 9Router, all state kept inside this repo under ./data/
+# - ./config/openclaw.json  = source of truth (tracked, no secrets). Sync into runtime via scripts/sync-config.sh
+# - ./data/openclaw-home     -> /home/node/.openclaw (live openclaw.json copy + auth, state, sqlite — gitignored)
+# NOTE: openclaw.json is NOT file-mounted (atomic rewrites fail with EBUSY on file binds).
+# - ./openclaw-workspace      -> /home/node/.openclaw/workspace (AGENTS.md, resume.md, jobs/)
+# - ./data/9router-data    -> /app/data (9router db.json, combos, keys)
+# Inter-container model endpoint: http://9router:20128/v1
+# Host access: OpenClaw http://127.0.0.1:18789, 9Router http://127.0.0.1:20128
+
+services:
+  9router:
+    image: ${NINE_ROUTER_IMAGE:-decolua/9router:latest}
+    container_name: workfinder-9router
+    hostname: workfinder-9router
+    restart: unless-stopped
+    ports:
+      - "${NINE_ROUTER_PORT:-20128}:20128"
+    environment:
+      - PORT=20128
+      - HOSTNAME=0.0.0.0
+      - DATA_DIR=/app/data
+      # Dashboard password (default 123456 must be changed for non-localhost access)
+      - INITIAL_PASSWORD=${NINE_ROUTER_PASSWORD:-}
+    volumes:
+      - ./data/9router-data:/app/data
+    networks:
+      - workfinder
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:20128/v1/models"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  openclaw-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.gateway
+    # Local tag (base + chromium). Rebuild with: docker compose up -d --build openclaw-gateway
+    image: workfinder-openclaw:latest
+    container_name: workfinder-openclaw
+    hostname: workfinder-openclaw
+    restart: unless-stopped
+    depends_on:
+      9router:
+        condition: service_started
+    ports:
+      - "${OPENCLAW_PORT:-18789}:18789"
+    environment:
+      - TZ=${TZ:-UTC}
+      - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN:?set in .env}
+      # Telegram pairing (gateway reads these; no secrets committed)
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_ALLOWED_CHAT_IDS=${TELEGRAM_ALLOWED_CHAT_IDS:-}
+      # 9Router endpoint key (created in 9Router dashboard -> pasted into .env)
+      - NINE_ROUTER_API_KEY=${NINE_ROUTER_API_KEY:-}
+      # Tavily web search (free 1000 credits/mo) - auto-detected by OpenClaw
+      - TAVILY_API_KEY=${TAVILY_API_KEY:-}
+    volumes:
+      # Live runtime home (openclaw.json copy + auth-profiles, state, sqlite — gitignored).
+      # Edit ./config/openclaw.json then run scripts/sync-config.sh to update the live copy.
+      - ./data/openclaw-home:/home/node/.openclaw
+      # Versioned workspace (AGENTS.md, resume.md, jobs/ — tracked except resume.md)
+      - ./openclaw-workspace:/home/node/.openclaw/workspace
+      # Persistent Chromium profiles for authenticated reads (optional)
+      - ./data/browser-profiles:/home/node/.openclaw/browser-profiles
+    networks:
+      - workfinder
+
+  # One-shot CLI sharing the gateway network namespace (doctor, config, dashboard URL)
+  openclaw-cli:
+    image: ${OPENCLAW_IMAGE:-ghcr.io/openclaw/openclaw:latest}
+    profiles: ["cli"]
+    network_mode: "service:openclaw-gateway"
+    volumes:
+      - ./data/openclaw-home:/home/node/.openclaw
+      - ./openclaw-workspace:/home/node/.openclaw/workspace
+    environment:
+      - TZ=${TZ:-UTC}
+    entrypoint: ["node", "dist/index.js"]
+
+networks:
+  workfinder:
+    name: workfinder-net

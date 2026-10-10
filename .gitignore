@@ -1,0 +1,10 @@
+.env
+data/
+*.log
+openclaw-workspace/resume.md
+openclaw-workspace/jobs/queue/*
+!openclaw-workspace/jobs/queue/.gitkeep
+openclaw-workspace/jobs/applied.json
+openclaw-workspace/jobs/logs/*
+!openclaw-workspace/jobs/logs/.gitkeep
+.DS_Store
