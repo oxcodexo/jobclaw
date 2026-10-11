@@ -1,5 +1,7 @@
 # JobClaw
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A self-hosted AI job finder: **OpenClaw** agent + **9Router** free-model routing + **Tavily**
 search + **Telegram** digests, all in Docker. It finds postings, scores them against your
 resume, and drafts tailored cover letters — and it **never applies on your behalf**
@@ -55,5 +57,8 @@ Start there — this README is the map, the tutorial is the road.
 
 Issues and PRs welcome. Keep docs in their Diátaxis lane (tutorials/how-to/reference/
 explanation), keep secrets out of examples, and update the cheatsheet when you add a
-command. License: TBD by the maintainer (no license file yet — all rights reserved by
-default until one is added).
+command.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
