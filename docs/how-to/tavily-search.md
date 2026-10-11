@@ -39,7 +39,7 @@ docker compose exec openclaw-gateway sh -c 'echo "key len: ${#TAVILY_API_KEY}"'
 docker compose exec openclaw-gateway node dist/index.js automations add --at 2m \
   --message "Use tavily_search with query 'AI engineer remote jobs greenhouse.io', max_results 5, search_depth basic. Reply with titles+URLs only, under 80 words." \
   --name "Search smoke test" --agent main \
-  --announce --channel telegram --to <YOUR_CHAT_ID> --model 9router/jobfinder-free
+  --announce --channel telegram --to <YOUR_CHAT_ID> --model 9router/jobclaw-free
 # wait ~3 min, then:
 docker compose exec openclaw-gateway node dist/index.js automations runs <ID>
 # afterwards: automations rm <ID>

@@ -27,7 +27,7 @@ One-way flow: edit this file → `scripts/sync-config.sh` → restart gateway. T
 | `gateway.mode/bind/port` | `local` / `lan` / `18789` |
 | `browser.noSandbox` | required for Chromium in containers |
 | `models.providers.9router` | `baseUrl` (inter-container `http://9router:20128/v1`), `apiKey: ${NINE_ROUTER_API_KEY}`, `api: openai-completions`, `request.allowPrivateNetwork: true`, `models: []` (discovery) |
-| `agents.defaults.model.primary` | e.g. `9router/jobfinder-free` (combo name is the model id) |
+| `agents.defaults.model.primary` | e.g. `9router/jobclaw-free` (combo name is the model id) |
 | `agents.defaults.modelPolicy.allow` | refs the gateway may use — job `--model` overrides must be listed |
 | `agents.defaults.workspace` | `/home/node/.openclaw/workspace` |
 | `channels.telegram` | `enabled: true`, `dmPolicy: pairing` (token via `TELEGRAM_BOT_TOKEN` env fallback) |
@@ -40,7 +40,7 @@ One-way flow: edit this file → `scripts/sync-config.sh` → restart gateway. T
 | Service | Image / build | Ports | Volumes |
 |---|---|---|---|
 | `9router` | `decolua/9router:latest`, `DATA_DIR=/app/data` | `20128:20128` | `./data/9router-data:/app/data` |
-| `openclaw-gateway` | built from `Dockerfile.gateway` (upstream + Chromium), stable `hostname: workfinder-openclaw` | `18789:18789` | `data/openclaw-home`, `openclaw-workspace`, `browser-profiles` → `/home/node/.openclaw[/workspace]` |
+| `openclaw-gateway` | built from `Dockerfile.gateway` (upstream + Chromium), stable `hostname: jobclaw-openclaw` | `18789:18789` | `data/openclaw-home`, `openclaw-workspace`, `browser-profiles` → `/home/node/.openclaw[/workspace]` |
 | `openclaw-cli` | upstream image, profile `cli`, `network_mode: service:openclaw-gateway` | — | same home + workspace mounts |
 
 Stable hostnames matter: OpenClaw ties state ownership to the writer identity. Recreate-happy

@@ -1,4 +1,4 @@
-name: work-agent-finder
+name: jobclaw
 
 # OpenClaw Gateway + 9Router, all state kept inside this repo under ./data/
 # - ./config/openclaw.json  = source of truth (tracked, no secrets). Sync into runtime via scripts/sync-config.sh
@@ -12,8 +12,8 @@ name: work-agent-finder
 services:
   9router:
     image: ${NINE_ROUTER_IMAGE:-decolua/9router:latest}
-    container_name: workfinder-9router
-    hostname: workfinder-9router
+    container_name: jobclaw-9router
+    hostname: jobclaw-9router
     restart: unless-stopped
     ports:
       - "${NINE_ROUTER_PORT:-20128}:20128"
@@ -26,7 +26,7 @@ services:
     volumes:
       - ./data/9router-data:/app/data
     networks:
-      - workfinder
+      - jobclaw
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:20128/v1/models"]
       interval: 30s
@@ -39,9 +39,9 @@ services:
       context: .
       dockerfile: Dockerfile.gateway
     # Local tag (base + chromium). Rebuild with: docker compose up -d --build openclaw-gateway
-    image: workfinder-openclaw:latest
-    container_name: workfinder-openclaw
-    hostname: workfinder-openclaw
+    image: jobclaw-openclaw:latest
+    container_name: jobclaw-openclaw
+    hostname: jobclaw-openclaw
     restart: unless-stopped
     depends_on:
       9router:
@@ -67,7 +67,7 @@ services:
       # Persistent Chromium profiles for authenticated reads (optional)
       - ./data/browser-profiles:/home/node/.openclaw/browser-profiles
     networks:
-      - workfinder
+      - jobclaw
 
   # One-shot CLI sharing the gateway network namespace (doctor, config, dashboard URL)
   openclaw-cli:
@@ -82,5 +82,5 @@ services:
     entrypoint: ["node", "dist/index.js"]
 
 networks:
-  workfinder:
-    name: workfinder-net
+  jobclaw:
+    name: jobclaw-net

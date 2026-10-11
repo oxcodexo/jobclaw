@@ -2,6 +2,8 @@
 data/
 *.log
 openclaw-workspace/resume.md
+openclaw-workspace/DREAMS.md
+openclaw-workspace/memory/*
 openclaw-workspace/jobs/queue/*
 !openclaw-workspace/jobs/queue/.gitkeep
 openclaw-workspace/jobs/applied.json

@@ -21,8 +21,8 @@ downloads and dashboard clicks. By the end, job digests arrive in your Telegram 
 ## 1. Clone and configure secrets
 
 ```bash
-git clone <YOUR-REPO-URL> work-agent-finder
-cd work-agent-finder
+git clone https://github.com/oxcodexo/jobclaw.git jobclaw
+cd jobclaw
 cp .env.example .env
 ```
 
@@ -57,8 +57,8 @@ small Chromium layer for the gateway — this can take 5–10 minutes. Expected 
 
 ```bash
 docker compose ps
-# workfinder-9router    Up (healthy)   0.0.0.0:20128->20128/tcp
-# workfinder-openclaw   Up             0.0.0.0:18789->18789/tcp
+# jobclaw-9router    Up (healthy)   0.0.0.0:20128->20128/tcp
+# jobclaw-openclaw   Up             0.0.0.0:18789->18789/tcp
 ```
 
 Key URLs (all local):
@@ -76,7 +76,7 @@ Full walkthrough: [free models via 9Router](../how-to/free-models-9router.md). S
 1. Open http://127.0.0.1:20128, log in with `NINE_ROUTER_PASSWORD` from `.env`.
 2. **Providers** → connect **Kiro AI** (OAuth via AWS Builder ID / Google / GitHub —
    ~50 credits/month free) and **OpenCode Free** (one click, no auth).
-3. **Combo** → create `jobfinder-free`, add free models with the most reliable first
+3. **Combo** → create `jobclaw-free`, add free models with the most reliable first
    (e.g. `oc/muse-spark-...`, then Kiro non-thinking models; keep `-thinking` variants last —
    they burn credits fast).
 4. **Endpoint / API keys** → create key (e.g. name `openclaw`), copy it into `.env` as
@@ -138,7 +138,7 @@ EXE="docker compose exec -T openclaw-gateway node dist/index.js"
 $EXE automations add --cron "0 7 * * *" --tz Africa/Casablanca \
   --message "Find new AI Engineer / Full-Stack postings (remote or Morocco) using tavily_search: 2 queries (basic, max 5 each) over Greenhouse/Lever boards. tavily_extract the best 4. Score 0-100 vs openclaw-workspace/resume.md, keep 70+. Write keepers to jobs/queue/YYYY-MM-DD-search-<slug>.md with score, why-fit, tailored cover letter. Skip URLs in jobs/applied.json. NEVER apply or submit." \
   --name "Jobs: AI remote search" --agent main \
-  --announce --channel telegram --to <YOUR_CHAT_ID> --model 9router/jobfinder-free
+  --announce --channel telegram --to <YOUR_CHAT_ID> --model 9router/jobclaw-free
 ```
 
 Repeat for LinkedIn (`15 7 * * *`, `site:linkedin.com/jobs` snippets) and Upwork
@@ -163,7 +163,7 @@ from your own browser, and tell the bot what you sent so it stays tracked.
 - `error lines` hunt: `docker compose logs --since 10m openclaw-gateway | grep -iE "could not be verified|Failing check|failed to start|invalid"`.
 - State-ownership errors after running CLI from another container: stop the gateway, run
   management commands only via `docker compose exec`, restart. Full story:
-  [architecture](../explanation/architecture.md#operational-lessons).
+  [architecture](../explanation/architecture.md).
 
 ## Next steps
 

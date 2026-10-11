@@ -1,4 +1,4 @@
-# Work Agent Finder
+# JobClaw
 
 A self-hosted AI job finder: **OpenClaw** agent + **9Router** free-model routing + **Tavily**
 search + **Telegram** digests, all in Docker. It finds postings, scores them against your
@@ -16,7 +16,7 @@ in your own browser, you tell the bot what went out.
 ## Quickstart
 
 ```bash
-git clone <YOUR-REPO-URL> work-agent-finder && cd work-agent-finder
+git clone https://github.com/oxcodexo/jobclaw.git jobclaw && cd jobclaw
 cp .env.example .env   # then fill secrets (see below)
 docker compose up -d
 ```

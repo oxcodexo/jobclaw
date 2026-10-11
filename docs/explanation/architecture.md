@@ -18,7 +18,7 @@ You (host Firefox) — the only place Apply/Send is ever clicked
   (57+ tools), skills, SQLite state. It owns all decisions; it never submits applications.
 - **9Router** is a local model router, not an LLM. One OpenAI-compatible endpoint, provider
   combos with fallback, per-endpoint API keys. The combo name *is* the model id
-  (`jobfinder-free`).
+  (`jobclaw-free`).
 - **Telegram** is the only channel: digests out, links and pairing in, owner commands optional.
 - **Tavily** is the discovery backbone: `tavily_search` (basic, ≤5) finds postings,
   `tavily_extract` reads them server-side — including JS-rendered pages the container

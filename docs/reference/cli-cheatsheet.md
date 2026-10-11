@@ -40,7 +40,7 @@ $EXE channels status --probe
 ## Models
 
 ```bash
-$EXE infer model run --model 9router/jobfinder-free \
+$EXE infer model run --model 9router/jobclaw-free \
   --prompt "Reply with exactly: GATEWAY_OK" --json
 ```
 
@@ -66,9 +66,9 @@ $EXE plugins install @openclaw/tavily-plugin
 ```bash
 $EXE automations add --cron "0 7 * * *" --tz Africa/Casablanca --message "<prompt>" \
   --name "<name>" --agent main --announce --channel telegram --to <CHAT_ID> \
-  --model 9router/jobfinder-free
+  --model 9router/jobclaw-free
 $EXE automations add --at 3m --message "<prompt>" --name "<tmp>" --agent main \
-  --announce --channel telegram --to <CHAT_ID> --model 9router/jobfinder-free  # one-shot test
+  --announce --channel telegram --to <CHAT_ID> --model 9router/jobclaw-free  # one-shot test
 $EXE automations list
 $EXE automations show <ID>
 $EXE automations runs <ID>                  # run history

@@ -24,10 +24,10 @@
     "defaults": {
       "workspace": "/home/node/.openclaw/workspace",
       "model": {
-        "primary": "9router/jobfinder-free"
+        "primary": "9router/jobclaw-free"
       },
       "modelPolicy": {
-        "allow": ["9router/jobfinder-free", "9router/kr/claude-haiku-4.5", "9router/kr/claude-sonnet-4.5"]
+        "allow": ["9router/jobclaw-free", "9router/kr/claude-haiku-4.5", "9router/kr/claude-sonnet-4.5"]
       }
     }
   },

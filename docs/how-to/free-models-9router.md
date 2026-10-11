@@ -24,7 +24,7 @@ fallback. 9Router itself never bills you.
 
 ## 3. Build the combo (Combo page)
 
-Create `jobfinder-free`, add models highest-priority first. Proven order:
+Create `jobclaw-free`, add models highest-priority first. Proven order:
 
 1. `oc/muse-spark-...` (OpenCode Free — tool calls verified working)
 2. Other `oc/*` / `mmf/*` free models
@@ -48,12 +48,12 @@ curl -s -H "Authorization: Bearer $NINE_ROUTER_API_KEY" \
   "import json,sys; [print('-',m['id']) for m in json.load(sys.stdin).get('data',[])]"
 ```
 
-You should see `jobfinder-free` plus provider models. Then prove inference end-to-end
+You should see `jobclaw-free` plus provider models. Then prove inference end-to-end
 through OpenClaw (not just 9Router):
 
 ```bash
 docker compose exec openclaw-gateway node dist/index.js infer model run \
-  --model 9router/jobfinder-free --prompt "Reply with exactly: GATEWAY_OK" --json
+  --model 9router/jobclaw-free --prompt "Reply with exactly: GATEWAY_OK" --json
 ```
 
 ## When it fails

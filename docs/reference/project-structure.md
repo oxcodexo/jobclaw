@@ -1,7 +1,7 @@
 # Reference: project structure
 
 ```text
-work-agent-finder/
+jobclaw/
 ├── docker-compose.yml        # 9router + openclaw-gateway (+ cli profile); all mounts
 ├── Dockerfile.gateway        # upstream OpenClaw + headless Chromium layer
 ├── .env                      # YOUR secrets (gitignored — copy from .env.example)
@@ -41,3 +41,7 @@ work-agent-finder/
   `.gitignore` draws the line — check it after any change.
 - **`data/` is entirely gitignored.** It contains credentials, sessions, and SQLite state.
   Back it up encrypted, never commit it.
+- **Runtime names match the repo**: containers `jobclaw-9router` / `jobclaw-openclaw`,
+  network `jobclaw-net`, image `jobclaw-openclaw:latest`, hostnames likewise. Stable
+  hostnames matter — OpenClaw attests state to writer identity (see
+  [architecture](architecture.md)).
