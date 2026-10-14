@@ -2,9 +2,14 @@
 
 ## Update images
 
+# Pinned tags (validated combo — OpenClaw 2026.9.9 + 9Router 0.5.95).
+# Bump deliberately, never float on :latest (surprise schema breaks).
+# To bump: update the tags in .env.example + .env + Dockerfile.gateway +
+# docker-compose.yml defaults, then follow this same procedure.
+
 ```bash
-docker pull ghcr.io/openclaw/openclaw:latest
-docker pull decolua/9router:latest
+docker pull ghcr.io/openclaw/openclaw:2026.9.9
+docker pull decolua/9router:0.5.95
 docker compose up -d --build openclaw-gateway
 docker compose up -d
 docker compose ps

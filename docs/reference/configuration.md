@@ -40,7 +40,7 @@ inspect via `docker compose exec openclaw-gateway cat /home/node/.openclaw/openc
 
 | Service | Image / build | Ports | Volumes |
 |---|---|---|---|
-| `9router` | `decolua/9router:latest`, `DATA_DIR=/app/data` | `20128:20128` | `./data/9router-data:/app/data` |
+| `9router` | `decolua/9router:0.5.95`, `DATA_DIR=/app/data` | `20128:20128` | `./data/9router-data:/app/data` |
 | `openclaw-gateway` | built from `Dockerfile.gateway` (upstream + Chromium), stable `hostname: jobclaw-openclaw` | `18789:18789` | `openclaw-home` → `/home/node/.openclaw`, `openclaw-workspace` bind → `/home/node/.openclaw/workspace`, `browser-profiles` → `/home/node/.openclaw/browser-profiles` |
 | `openclaw-cli` | upstream image, profile `cli`, `network_mode: service:openclaw-gateway`, entrypoint `node openclaw.mjs` | — | same home volume + workspace bind |
 

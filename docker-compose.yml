@@ -13,7 +13,7 @@ name: jobclaw
 
 services:
   9router:
-    image: ${NINE_ROUTER_IMAGE:-decolua/9router:latest}
+    image: ${NINE_ROUTER_IMAGE:-decolua/9router:0.5.95}
     container_name: jobclaw-9router
     hostname: jobclaw-9router
     restart: unless-stopped
@@ -74,7 +74,7 @@ services:
 
   # One-shot CLI sharing the gateway network namespace (doctor, config, dashboard URL)
   openclaw-cli:
-    image: ${OPENCLAW_IMAGE:-ghcr.io/openclaw/openclaw:latest}
+    image: ${OPENCLAW_IMAGE:-ghcr.io/openclaw/openclaw:2026.9.9}
     profiles: ["cli"]
     network_mode: "service:openclaw-gateway"
     volumes:

@@ -69,7 +69,7 @@ Fresh volumes need `gateway.mode` seeded once (empty home blocks start otherwise
 docker compose exec -T openclaw-gateway node openclaw.mjs config set gateway.mode local
 # if the gateway is maintenance-locked: docker compose stop openclaw-gateway, then one-shot:
 # docker run --rm --hostname jobclaw-openclaw -v jobclaw-openclaw-home:/home/node/.openclaw \
-#   ghcr.io/openclaw/openclaw:latest node openclaw.mjs config set gateway.mode local
+#   ghcr.io/openclaw/openclaw:2026.9.9 node openclaw.mjs config set gateway.mode local
 # then: docker compose up -d
 ```
 
