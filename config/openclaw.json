@@ -16,7 +16,7 @@
         "request": {
           "allowPrivateNetwork": true
         },
-        "models": []
+        "models": [{ "id": "jobclaw-free", "name": "jobclaw-free" }]
       }
     }
   },

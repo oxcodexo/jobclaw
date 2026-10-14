@@ -1,8 +1,10 @@
 name: jobclaw
 
-# OpenClaw Gateway + 9Router, all state kept inside this repo under ./data/
+# OpenClaw Gateway + 9Router.
 # - ./config/openclaw.json  = source of truth (tracked, no secrets). Sync into runtime via scripts/sync-config.sh
-# - ./data/openclaw-home     -> /home/node/.openclaw (live openclaw.json copy + auth, state, sqlite — gitignored)
+# - openclaw-home (named volume) -> /home/node/.openclaw (live openclaw.json copy + auth, state, sqlite)
+#   Named (not bind) so Windows Docker Desktop file sharing (no fchmod/hardlink/SQLite primitives)
+#   doesn't crash Doctor (exit 78 / EPERM / staged-publish). See docs/explanation/architecture.md.
 # NOTE: openclaw.json is NOT file-mounted (atomic rewrites fail with EBUSY on file binds).
 # - ./openclaw-workspace      -> /home/node/.openclaw/workspace (AGENTS.md, resume.md, jobs/)
 # - ./data/9router-data    -> /app/data (9router db.json, combos, keys)
@@ -59,13 +61,14 @@ services:
       # Tavily web search (free 1000 credits/mo) - auto-detected by OpenClaw
       - TAVILY_API_KEY=${TAVILY_API_KEY:-}
     volumes:
-      # Live runtime home (openclaw.json copy + auth-profiles, state, sqlite — gitignored).
+      # Live runtime home as NAMED VOLUME (newer images do fchmod/atomic staged publishes
+      # that fail with EPERM on Windows bind mounts). Workspace stays bind-mounted.
       # Edit ./config/openclaw.json then run scripts/sync-config.sh to update the live copy.
-      - ./data/openclaw-home:/home/node/.openclaw
+      - openclaw-home:/home/node/.openclaw
       # Versioned workspace (AGENTS.md, resume.md, jobs/ — tracked except resume.md)
       - ./openclaw-workspace:/home/node/.openclaw/workspace
-      # Persistent Chromium profiles for authenticated reads (optional)
-      - ./data/browser-profiles:/home/node/.openclaw/browser-profiles
+      # Persistent Chromium profiles (named volume for same Windows-perms reason)
+      - browser-profiles:/home/node/.openclaw/browser-profiles
     networks:
       - jobclaw
 
@@ -75,12 +78,18 @@ services:
     profiles: ["cli"]
     network_mode: "service:openclaw-gateway"
     volumes:
-      - ./data/openclaw-home:/home/node/.openclaw
+      - openclaw-home:/home/node/.openclaw
       - ./openclaw-workspace:/home/node/.openclaw/workspace
     environment:
       - TZ=${TZ:-UTC}
-    entrypoint: ["node", "dist/index.js"]
+    entrypoint: ["node", "openclaw.mjs"]
 
 networks:
   jobclaw:
     name: jobclaw-net
+
+volumes:
+  openclaw-home:
+    name: jobclaw-openclaw-home
+  browser-profiles:
+    name: jobclaw-browser-profiles

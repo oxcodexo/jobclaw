@@ -52,7 +52,7 @@ You should see `jobclaw-free` plus provider models. Then prove inference end-to-
 through OpenClaw (not just 9Router):
 
 ```bash
-docker compose exec openclaw-gateway node dist/index.js infer model run \
+docker compose exec openclaw-gateway node openclaw.mjs infer model run \
   --model 9router/jobclaw-free --prompt "Reply with exactly: GATEWAY_OK" --json
 ```
 

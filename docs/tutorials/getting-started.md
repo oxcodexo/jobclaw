@@ -53,12 +53,31 @@ docker compose ps
 ```
 
 First run pulls two images (`ghcr.io/openclaw/openclaw` + `decolua/9router`) and builds a
-small Chromium layer for the gateway — this can take 5–10 minutes. Expected state:
+small Chromium layer for the gateway — this can take 5–10 minutes. It also creates two
+named volumes (`jobclaw-openclaw-home`, `jobclaw-browser-profiles`) — runtime home lives
+there, not in `./data/`, so Windows binds don't crash Doctor. Expected state:
 
 ```bash
 docker compose ps
 # jobclaw-9router    Up (healthy)   0.0.0.0:20128->20128/tcp
 # jobclaw-openclaw   Up             0.0.0.0:18789->18789/tcp
+```
+
+Fresh volumes need `gateway.mode` seeded once (empty home blocks start otherwise):
+
+```bash
+docker compose exec -T openclaw-gateway node openclaw.mjs config set gateway.mode local
+# if the gateway is maintenance-locked: docker compose stop openclaw-gateway, then one-shot:
+# docker run --rm --hostname jobclaw-openclaw -v jobclaw-openclaw-home:/home/node/.openclaw \
+#   ghcr.io/openclaw/openclaw:latest node openclaw.mjs config set gateway.mode local
+# then: docker compose up -d
+```
+
+Seed the tracked base config into the volume:
+
+```bash
+scripts/sync-config.sh
+docker compose restart openclaw-gateway
 ```
 
 Key URLs (all local):
@@ -80,7 +99,7 @@ Full walkthrough: [free models via 9Router](../how-to/free-models-9router.md). S
    (e.g. `oc/muse-spark-...`, then Kiro non-thinking models; keep `-thinking` variants last —
    they burn credits fast).
 4. **Endpoint / API keys** → create key (e.g. name `openclaw`), copy it into `.env` as
-   `NINE_ROUTER_API_KEY`.
+   `NINE_ROUTER_API_KEY` (replacing the `placeholder-change-me...` boot value).
 5. Apply and verify the key answers:
 
 ```bash
@@ -102,8 +121,8 @@ Full walkthrough: [Telegram setup](../how-to/telegram-setup.md). Short version:
 ```bash
 docker compose restart openclaw-gateway
 # (send any message to the bot first)
-docker compose exec openclaw-gateway node dist/index.js pairing list telegram
-docker compose exec openclaw-gateway node dist/index.js pairing approve telegram <CODE>
+docker compose exec openclaw-gateway node openclaw.mjs pairing list telegram
+docker compose exec openclaw-gateway node openclaw.mjs pairing approve telegram <CODE>
 ```
 
 > Always run state-writing CLI commands with `docker compose exec` (same container identity).
@@ -118,8 +137,8 @@ Full walkthrough: [Tavily search](../how-to/tavily-search.md). Short version (ke
 ```bash
 docker compose up -d --force-recreate openclaw-gateway
 # wait ~60s for boot, then:
-docker compose exec openclaw-gateway node dist/index.js plugins install @openclaw/tavily-plugin
-docker compose exec openclaw-gateway node dist/index.js skills check | grep -i tavily
+docker compose exec openclaw-gateway node openclaw.mjs plugins install @openclaw/tavily-plugin
+docker compose exec openclaw-gateway node openclaw.mjs skills check | grep -i tavily
 ```
 
 ## 6. Drop in your resume and profile
@@ -134,7 +153,7 @@ The repo's agent instructions (`openclaw-workspace/AGENTS.md`) describe the inte
 Create them (times in `--tz`, adjust to yours):
 
 ```bash
-EXE="docker compose exec -T openclaw-gateway node dist/index.js"
+EXE="docker compose exec -T openclaw-gateway node openclaw.mjs"
 $EXE automations add --cron "0 7 * * *" --tz Africa/Casablanca \
   --message "Find new AI Engineer / Full-Stack postings (remote or Morocco) using tavily_search: 2 queries (basic, max 5 each) over Greenhouse/Lever boards. tavily_extract the best 4. Score 0-100 vs openclaw-workspace/resume.md, keep 70+. Write keepers to jobs/queue/YYYY-MM-DD-search-<slug>.md with score, why-fit, tailored cover letter. Skip URLs in jobs/applied.json. NEVER apply or submit." \
   --name "Jobs: AI remote search" --agent main \
@@ -149,7 +168,7 @@ Repeat for LinkedIn (`15 7 * * *`, `site:linkedin.com/jobs` snippets) and Upwork
 
 ```bash
 # run the morning job right now and wait for the result:
-docker compose exec -T openclaw-gateway node dist/index.js automations run <JOB_ID> \
+docker compose exec -T openclaw-gateway node openclaw.mjs automations run <JOB_ID> \
   --wait --wait-timeout 12m --poll-interval 5s
 ls openclaw-workspace/jobs/queue/
 ```

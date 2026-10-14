@@ -49,9 +49,16 @@ is refused for isolated runs), `--tz` set to the user's zone. Prompts cap scope
   a crash loop (`could not be verified`); recovery is stop → move `state/` aside → boot
   fresh → re-pair. Details in [configuration](configuration.md).
 - **Config migrations.** Doctor rewrites the live config across versions
-  (`models` → `modelPolicy.allow`, provider schema `models.providers.*`). Keep the tracked
-  base current; read doctor blocks after every update.
+  (provider schema `models.providers.*.models[]`, `meta.migrations.*`). Keep the tracked
+  base current; read doctor blocks after every update. `agents.defaults.modelPolicy.allow`
+  is still the override allowlist (do not delete); custom providers need at least one
+  `models[]` entry with matching `id` (we ship `{id,name}`).
 - **File mounts vs rewrites.** Never bind-mount `openclaw.json` as a file — atomic
-  renames fail with `EBUSY`. Seed via `sync-config.sh` instead.
+  renames fail with `EBUSY`. Seed via `sync-config.sh` into the named volume instead.
+- **Binds vs named volumes.** `/home/node/.openclaw` and browser profiles live in named
+  volumes, not Windows binds: newer images do `fchmod`/atomic staged publishes that fail
+  with `EPERM`/`FsSafeError` on Docker Desktop file sharing and crash-loop Doctor
+  (exit 78). Volumes live in the Linux VM on native ext4. Workspace stays bind-mounted
+  (plain markdown, no chmod path). Same reason `9router-data` bind is fine.
 - **Env needs recreate.** `docker compose restart` does not reload environment; use
   `up -d --force-recreate <service>`.

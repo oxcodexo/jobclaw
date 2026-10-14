@@ -20,18 +20,19 @@ does not reload environment.
 ## `config/openclaw.json` (tracked base config)
 
 One-way flow: edit this file → `scripts/sync-config.sh` → restart gateway. The live copy at
-`data/openclaw-home/openclaw.json` is doctor-managed (gitignored).
+`openclaw.json` inside the `openclaw-home` named volume is doctor-managed (not in git;
+inspect via `docker compose exec openclaw-gateway cat /home/node/.openclaw/openclaw.json`).
 
 | Key | Purpose |
 |---|---|
-| `gateway.mode/bind/port` | `local` / `lan` / `18789` |
+| `gateway.mode/bind/port` | `local` / `lan` / `18789` (fresh volumes need `gateway.mode local` seeded once — see tutorial step 2) |
 | `browser.noSandbox` | required for Chromium in containers |
-| `models.providers.9router` | `baseUrl` (inter-container `http://9router:20128/v1`), `apiKey: ${NINE_ROUTER_API_KEY}`, `api: openai-completions`, `request.allowPrivateNetwork: true`, `models: []` (discovery) |
+| `models.providers.9router` | `baseUrl` (inter-container `http://9router:20128/v1`), `apiKey: ${NINE_ROUTER_API_KEY}` (use placeholder to boot fresh, then real key), `api: openai-completions`, `request.allowPrivateNetwork: true`, `models: [{id, name}]` (e.g. `jobclaw-free`; empty array is rejected) |
 | `agents.defaults.model.primary` | e.g. `9router/jobclaw-free` (combo name is the model id) |
 | `agents.defaults.modelPolicy.allow` | refs the gateway may use — job `--model` overrides must be listed |
 | `agents.defaults.workspace` | `/home/node/.openclaw/workspace` |
 | `channels.telegram` | `enabled: true`, `dmPolicy: pairing` (token via `TELEGRAM_BOT_TOKEN` env fallback) |
-| `plugins.entries.tavily.enabled` | search plugin switch |
+| `plugins.entries.tavily.enabled` | search plugin switch (key via `TAVILY_API_KEY` env; install package post-boot — see Tavily how-to) |
 | `tools.web.search.provider` | `tavily` |
 | `commands.ownerAllowFrom` | e.g. `["telegram:<YOUR_CHAT_ID>"]` for Telegram owner commands |
 
@@ -40,8 +41,8 @@ One-way flow: edit this file → `scripts/sync-config.sh` → restart gateway. T
 | Service | Image / build | Ports | Volumes |
 |---|---|---|---|
 | `9router` | `decolua/9router:latest`, `DATA_DIR=/app/data` | `20128:20128` | `./data/9router-data:/app/data` |
-| `openclaw-gateway` | built from `Dockerfile.gateway` (upstream + Chromium), stable `hostname: jobclaw-openclaw` | `18789:18789` | `data/openclaw-home`, `openclaw-workspace`, `browser-profiles` → `/home/node/.openclaw[/workspace]` |
-| `openclaw-cli` | upstream image, profile `cli`, `network_mode: service:openclaw-gateway` | — | same home + workspace mounts |
+| `openclaw-gateway` | built from `Dockerfile.gateway` (upstream + Chromium), stable `hostname: jobclaw-openclaw` | `18789:18789` | `openclaw-home` → `/home/node/.openclaw`, `openclaw-workspace` bind → `/home/node/.openclaw/workspace`, `browser-profiles` → `/home/node/.openclaw/browser-profiles` |
+| `openclaw-cli` | upstream image, profile `cli`, `network_mode: service:openclaw-gateway`, entrypoint `node openclaw.mjs` | — | same home volume + workspace bind |
 
 Stable hostnames matter: OpenClaw ties state ownership to the writer identity. Recreate-happy
 workflows and foreign-hostname CLI writes poison `state/openclaw.sqlite` ("ownership could

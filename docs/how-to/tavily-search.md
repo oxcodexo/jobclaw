@@ -22,8 +22,8 @@ Recreate the gateway so the new env lands, then install the plugin:
 ```bash
 docker compose up -d --force-recreate openclaw-gateway
 # wait ~60s for boot, then:
-docker compose exec openclaw-gateway node dist/index.js plugins install @openclaw/tavily-plugin
-docker compose exec openclaw-gateway node dist/index.js skills check | grep -i tavily
+docker compose exec openclaw-gateway node openclaw.mjs plugins install @openclaw/tavily-plugin
+docker compose exec openclaw-gateway node openclaw.mjs skills check | grep -i tavily
 # expected: 🔍 tavily (ready and visible)
 ```
 
@@ -36,12 +36,12 @@ docker compose exec openclaw-gateway sh -c 'echo "key len: ${#TAVILY_API_KEY}"'
 ## 2. Smoke-test a search (costs one agent run)
 
 ```bash
-docker compose exec openclaw-gateway node dist/index.js automations add --at 2m \
+docker compose exec openclaw-gateway node openclaw.mjs automations add --at 2m \
   --message "Use tavily_search with query 'AI engineer remote jobs greenhouse.io', max_results 5, search_depth basic. Reply with titles+URLs only, under 80 words." \
   --name "Search smoke test" --agent main \
   --announce --channel telegram --to <YOUR_CHAT_ID> --model 9router/jobclaw-free
 # wait ~3 min, then:
-docker compose exec openclaw-gateway node dist/index.js automations runs <ID>
+docker compose exec openclaw-gateway node openclaw.mjs automations runs <ID>
 # afterwards: automations rm <ID>
 ```
 

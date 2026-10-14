@@ -49,8 +49,8 @@ Restart so the gateway picks up `.env`, message the bot, then approve (codes exp
 ```bash
 docker compose restart openclaw-gateway
 # send any message to the bot, then:
-docker compose exec openclaw-gateway node dist/index.js pairing list telegram
-docker compose exec openclaw-gateway node dist/index.js pairing approve telegram <CODE>
+docker compose exec openclaw-gateway node openclaw.mjs pairing list telegram
+docker compose exec openclaw-gateway node openclaw.mjs pairing approve telegram <CODE>
 ```
 
 Verify with a real reply: message the bot (e.g. *"introduce yourself briefly"*). Silent bot
@@ -62,7 +62,7 @@ lines and `pairing list` for pending requests.
 `config/openclaw.json` → `commands.ownerAllowFrom: ["telegram:<YOUR_CHAT_ID>"]`, then
 `scripts/sync-config.sh` and restart. This lets your Telegram account run privileged
 commands. Without it you can still manage everything via
-`docker compose exec openclaw-gateway node dist/index.js ...` (see
+`docker compose exec openclaw-gateway node openclaw.mjs ...` (see
 [CLI cheatsheet](../reference/cli-cheatsheet.md)).
 
 ## When it fails

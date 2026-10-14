@@ -5,7 +5,7 @@ Avoid `docker compose run` for state-writing commands: one-shot containers carry
 hostnames and can trip OpenClaw's state-ownership check.
 
 ```bash
-EXE="docker compose exec -T openclaw-gateway node dist/index.js"
+EXE="docker compose exec -T openclaw-gateway node openclaw.mjs"
 ```
 
 ## Stack
@@ -24,7 +24,7 @@ docker compose down
 ## Config and sync
 
 ```bash
-scripts/sync-config.sh            # config/openclaw.json -> live copy (no-op if identical)
+scripts/sync-config.sh            # config/openclaw.json -> openclaw-home volume (no-op if identical)
 scripts/sync-config.sh --force
 scripts/check-queue.sh            # pending draft count (JSON, for --command jobs)
 ```
