@@ -54,7 +54,8 @@ is refused for isolated runs), `--tz` set to the user's zone. Prompts cap scope
   is still the override allowlist (do not delete); custom providers need at least one
   `models[]` entry with matching `id` (we ship `{id,name}`).
 - **File mounts vs rewrites.** Never bind-mount `openclaw.json` as a file — atomic
-  renames fail with `EBUSY`. Seed via `sync-config.sh` into the named volume instead.
+  renames fail with `EBUSY`. Configure via `scripts/bootstrap.sh` / `config set` instead —
+  never mount the file in.
 - **Binds vs named volumes.** `/home/node/.openclaw` and browser profiles live in named
   volumes, not Windows binds: newer images do `fchmod`/atomic staged publishes that fail
   with `EPERM`/`FsSafeError` on Docker Desktop file sharing and crash-loop Doctor

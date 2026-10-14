@@ -59,10 +59,13 @@ lines and `pairing list` for pending requests.
 
 ## 5. Owner commands (optional)
 
-`config/openclaw.json` → `commands.ownerAllowFrom: ["telegram:<YOUR_CHAT_ID>"]`, then
-`scripts/sync-config.sh` and restart. This lets your Telegram account run privileged
-commands. Without it you can still manage everything via
-`docker compose exec openclaw-gateway node openclaw.mjs ...` (see
+```bash
+docker compose exec -T openclaw-gateway node openclaw.mjs config set \
+  commands.ownerAllowFrom '["telegram:<YOUR_CHAT_ID>"]'
+docker compose restart openclaw-gateway
+```
+This lets your Telegram account run privileged commands. Without it you can still
+manage everything via `docker compose exec openclaw-gateway node openclaw.mjs ...` (see
 [CLI cheatsheet](../reference/cli-cheatsheet.md)).
 
 ## When it fails

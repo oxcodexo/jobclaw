@@ -21,12 +21,12 @@ docker compose stop openclaw-gateway
 docker compose down
 ```
 
-## Config and sync
+## Config
 
 ```bash
-scripts/sync-config.sh            # config/openclaw.json -> openclaw-home volume (no-op if identical)
-scripts/sync-config.sh --force
-scripts/check-queue.sh            # pending draft count (JSON, for --command jobs)
+scripts/bootstrap.sh            # apply project keys to openclaw-home volume (additive, idempotent)
+scripts/bootstrap.sh --check    # diff desired keys vs live, no writes
+scripts/check-queue.sh          # pending draft count (JSON, for --command jobs)
 ```
 
 ## Gateway / pairing / channels

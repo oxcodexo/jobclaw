@@ -12,16 +12,18 @@
 | `TAVILY_API_KEY` | yes | Tavily search key (`tvly-...`, free 1,000 credits/mo) |
 | `TZ` | no | cron timezone, default `UTC` (example: `Africa/Casablanca`) |
 | `OPENCLAW_PORT` / `NINE_ROUTER_PORT` | no | host ports, defaults `18789` / `20128` |
-| `OPENCLAW_IMAGE` / `NINE_ROUTER_IMAGE` | no | image overrides |
+| `OPENCLAW_BASE` / `NINE_ROUTER_IMAGE` | no | image overrides (base used at gateway build time; 9Router used at pull time). Gateway and `--profile cli` share the locally built image — always `--build` + repull together and check `--version` parity |
 
 Env-only changes need `docker compose up -d --force-recreate <service>` — plain `restart`
 does not reload environment.
 
-## `config/openclaw.json` (tracked base config)
+## Live config keys (volume `openclaw-home`, no tracked file)
 
-One-way flow: edit this file → `scripts/sync-config.sh` → restart gateway. The live copy at
-`openclaw.json` inside the `openclaw-home` named volume is doctor-managed (not in git;
-inspect via `docker compose exec openclaw-gateway cat /home/node/.openclaw/openclaw.json`).
+Flow: `scripts/bootstrap.sh` applies the project key set (additive, idempotent;
+`--check` shows drift) → restart gateway. Single tweaks: `config set <path> <value>`.
+The live copy is doctor-managed (not in git; inspect via
+`docker compose exec openclaw-gateway cat /home/node/.openclaw/openclaw.json`).
+There is intentionally no tracked config file — full-file syncs clobber Doctor keys.
 
 | Key | Purpose |
 |---|---|

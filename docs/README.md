@@ -23,7 +23,7 @@ syntax; read explanations to understand *why* the system is built this way.
 
 ## Reference (exact facts)
 
-- [Configuration](reference/configuration.md) — `.env` variables, `config/openclaw.json`,
+- [Configuration](reference/configuration.md) — `.env` variables, live config keys,
   services, volumes, ports.
 - [CLI cheatsheet](reference/cli-cheatsheet.md) — every command used to operate the stack.
 - [Project structure](reference/project-structure.md) — what each file and folder is for.

@@ -4,16 +4,26 @@
 
 # Pinned tags (validated combo — OpenClaw 2026.9.9 + 9Router 0.5.95).
 # Bump deliberately, never float on :latest (surprise schema breaks).
-# To bump: update the tags in .env.example + .env + Dockerfile.gateway +
-# docker-compose.yml defaults, then follow this same procedure.
+# To bump: update the tags in .env.example + .env (OPENCLAW_BASE,
+# NINE_ROUTER_IMAGE) + Dockerfile.gateway ARG default + docker-compose.yml
+# defaults, then follow this same procedure. (Old OPENCLAW_IMAGE var is
+# no longer used — gateway and CLI share the locally built image.)
 
 ```bash
-docker pull ghcr.io/openclaw/openclaw:2026.9.9
 docker pull decolua/9router:0.5.95
 docker compose up -d --build openclaw-gateway
 docker compose up -d
 docker compose ps
 docker compose logs --tail 20 openclaw-gateway
+# parity check: gateway and CLI must report the same version
+docker compose exec -T openclaw-gateway node openclaw.mjs --version
+docker compose --profile cli run --rm openclaw-cli --version
+```
+
+To float the base at build time without editing files:
+
+```bash
+OPENCLAW_BASE=ghcr.io/openclaw/openclaw:latest docker compose up -d --build openclaw-gateway
 ```
 
 > Security note: OpenClaw has had critical CVEs (e.g. CVE-2026-25253). Update promptly and
@@ -49,5 +59,6 @@ Legacy note: older versions used `./data/openclaw-home/` binds. If migrating, co
 - Commit tracked config/workspace/docs changes normally.
 - Before every commit: `git status --porcelain` — `.env`, `data/`, `resume.md`, queue
   drafts and `applied.json` must never appear. If one does, stop and fix `.gitignore`.
-- Config edits flow one way: edit `config/openclaw.json` → `scripts/sync-config.sh` →
-  restart gateway. Never hand-edit the live copy in the volume (doctor rewrites it).
+- Config edits flow one way into the volume: `scripts/bootstrap.sh` for the project
+  key set, `config set` for single tweaks, then restart gateway. Never hand-edit the
+  live copy in the volume (doctor rewrites it).

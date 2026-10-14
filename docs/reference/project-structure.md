@@ -6,10 +6,8 @@ jobclaw/
 ├── Dockerfile.gateway        # upstream OpenClaw + headless Chromium layer
 ├── .env                      # YOUR secrets (gitignored — copy from .env.example)
 ├── .env.example              # placeholder vars for new clones
-├── config/
-│   └── openclaw.json         # TRACKED base config (no secrets); seeds the live copy
 ├── scripts/
-│   ├── sync-config.sh        # config/openclaw.json -> openclaw-home volume
+│   ├── bootstrap.sh          # desired live keys -> openclaw-home volume (additive, idempotent)
 │   └── check-queue.sh        # queue-depth probe for --command cron jobs
 ├── openclaw-workspace/       # bind-mounted as the agent workspace
 │   ├── AGENTS.md             # agent operating instructions (injected every session)
@@ -22,19 +20,26 @@ jobclaw/
 │       ├── queue/            # drafts (gitignored runtime state)
 │       ├── applied.json      # sent URLs (gitignored runtime state)
 │       └── logs/             # run logs (gitignored)
-├── data/                     # gitignored runtime state (9Router DB; legacy openclaw-home binds)
-│   ├── 9router-data/         # 9Router db (combos, keys, quota)
-│   └── browser-profiles/     # legacy bind path (now named volume `jobclaw-browser-profiles`)
+├── data/                     # gitignored runtime state
+│   ├── 9router-data/         # 9Router db, live bind (combos, keys, quota)
+│   ├── openclaw-home/        # LEGACY pre-volume copy (unused since volume migration — see update.md)
+│   └── browser-profiles/     # LEGACY pre-volume copy (unused since volume migration)
 └── docs/                     # this documentation (Diátaxis layout)
 ```
 
 ## Mount logic (why it looks like this)
 
-- **Tracked vs live config split.** `config/openclaw.json` is the reproducible base.
-  The gateway only reads `openclaw.json` inside the `openclaw-home` named volume, which
-  OpenClaw's doctor rewrites (migrations, backups). `sync-config.sh` copies base → volume
-  (via `docker cp` when running, else `docker run -v`). Never edit the live copy by hand.
-  Never file-mount the base over it either: atomic rewrites fail with `EBUSY` on file binds.
+- **Live config, no tracked copy.** The gateway only reads `openclaw.json` inside the
+  `openclaw-home` named volume, which OpenClaw's doctor rewrites (migrations, backups).
+  Project keys are applied additively via `scripts/bootstrap.sh` (desired key set, `--check`
+  shows drift); single tweaks go through `config set`. There is intentionally no tracked
+  config file — full-file syncs clobber Doctor-managed keys (`wizard/meta/skills/owner`).
+  Never edit the live copy by hand.
+- **Why `openclaw.json` is never mounted in.** Three mount variants, three failures:
+  file bind → atomic rewrites fail `EBUSY`; symlink/dir tricks → renames replace the link
+  and the live file silently detaches from your host copy; whole-home bind → Doctor
+  crash-loops on Windows (`EPERM`/`FsSafeError`, exit 78). Named volume + `config set`
+  is the only safe combination.
 - **Named volumes for state.** `openclaw-home` (`jobclaw-openclaw-home`) and
   `browser-profiles` are named volumes so Doctor's `fchmod`/atomic staged publishes work
   on Windows Docker Desktop (binds crash-loop with `EPERM`/`FsSafeError`, exit 78).

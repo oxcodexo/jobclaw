@@ -1,8 +1,9 @@
 name: jobclaw
 
 # OpenClaw Gateway + 9Router.
-# - ./config/openclaw.json  = source of truth (tracked, no secrets). Sync into runtime via scripts/sync-config.sh
-# - openclaw-home (named volume) -> /home/node/.openclaw (live openclaw.json copy + auth, state, sqlite)
+# Live config lives in the openclaw-home volume, managed additively via
+# scripts/bootstrap.sh (desired keys) and `config set` (single tweaks).
+# The gateway/Doctor own the live copy (migrations, wizard/meta/skills state).
 #   Named (not bind) so Windows Docker Desktop file sharing (no fchmod/hardlink/SQLite primitives)
 #   doesn't crash Doctor (exit 78 / EPERM / staged-publish). See docs/explanation/architecture.md.
 # NOTE: openclaw.json is NOT file-mounted (atomic rewrites fail with EBUSY on file binds).
@@ -40,6 +41,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.gateway
+      args:
+        OPENCLAW_BASE: ${OPENCLAW_BASE:-ghcr.io/openclaw/openclaw:2026.9.9}
     # Local tag (base + chromium). Rebuild with: docker compose up -d --build openclaw-gateway
     image: jobclaw-openclaw:latest
     container_name: jobclaw-openclaw
@@ -63,7 +66,7 @@ services:
     volumes:
       # Live runtime home as NAMED VOLUME (newer images do fchmod/atomic staged publishes
       # that fail with EPERM on Windows bind mounts). Workspace stays bind-mounted.
-      # Edit ./config/openclaw.json then run scripts/sync-config.sh to update the live copy.
+      # Configure via scripts/bootstrap.sh (fresh volumes) or config set (tweaks).
       - openclaw-home:/home/node/.openclaw
       # Versioned workspace (AGENTS.md, resume.md, jobs/ — tracked except resume.md)
       - ./openclaw-workspace:/home/node/.openclaw/workspace
@@ -72,9 +75,11 @@ services:
     networks:
       - jobclaw
 
-  # One-shot CLI sharing the gateway network namespace (doctor, config, dashboard URL)
+  # One-shot CLI sharing the gateway network namespace (doctor, config, dashboard URL).
+  # Same built image as the gateway (version parity — never drift against shared state).
+  # Requires the image to exist: fresh clones run docker compose build first.
   openclaw-cli:
-    image: ${OPENCLAW_IMAGE:-ghcr.io/openclaw/openclaw:2026.9.9}
+    image: jobclaw-openclaw:latest
     profiles: ["cli"]
     network_mode: "service:openclaw-gateway"
     volumes:

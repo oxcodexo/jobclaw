@@ -48,14 +48,16 @@ git check-ignore .env openclaw-workspace/resume.md data && echo "secrets ignored
 ## 2. Start the stack
 
 ```bash
+docker compose build openclaw-gateway   # builds the gateway+CLI image (base + Chromium)
 docker compose up -d
 docker compose ps
 ```
 
-First run pulls two images (`ghcr.io/openclaw/openclaw` + `decolua/9router`) and builds a
-small Chromium layer for the gateway — this can take 5–10 minutes. It also creates two
-named volumes (`jobclaw-openclaw-home`, `jobclaw-browser-profiles`) — runtime home lives
-there, not in `./data/`, so Windows binds don't crash Doctor. Expected state:
+First run pulls the 9Router image and builds a small Chromium layer for the gateway —
+this can take 5–10 minutes. (Plain `up -d` does not build; the gateway and `--profile cli`
+one-shots both run the locally built `jobclaw-openclaw:latest`, so build first.)
+It also creates two named volumes (`jobclaw-openclaw-home`, `jobclaw-browser-profiles`) —
+runtime home lives there, not in `./data/`, so Windows binds don't crash Doctor. Expected state:
 
 ```bash
 docker compose ps
@@ -73,10 +75,11 @@ docker compose exec -T openclaw-gateway node openclaw.mjs config set gateway.mod
 # then: docker compose up -d
 ```
 
-Seed the tracked base config into the volume:
+Seed the project config into the volume (additive — safe to re-run, verifies with `--check`):
 
 ```bash
-scripts/sync-config.sh
+scripts/bootstrap.sh --check   # show drift vs desired keys, no writes
+scripts/bootstrap.sh           # apply
 docker compose restart openclaw-gateway
 ```
 
@@ -132,7 +135,7 @@ docker compose exec openclaw-gateway node openclaw.mjs pairing approve telegram 
 ## 5. Enable Tavily search
 
 Full walkthrough: [Tavily search](../how-to/tavily-search.md). Short version (key already in
-`.env`, plugin entry already in `config/openclaw.json`):
+`.env`, plugin entry applied by `scripts/bootstrap.sh`):
 
 ```bash
 docker compose up -d --force-recreate openclaw-gateway
