@@ -30,8 +30,8 @@ syntax; read explanations to understand *why* the system is built this way.
 
 ## Explanation (understanding)
 
-- [Architecture](explanation/architecture.md) — how OpenClaw, 9Router, models, Telegram and
-  cron fit together, and why discovery is search-first.
+- [Architecture](explanation/architecture.md) — how OpenClaw, 9Router, models, chat channels
+  and skills fit together, and why discovery is search-first.
 - [Free-tier limits and platform risks](explanation/free-tier-limits.md) — quotas, token burn,
   logging caveats, and why auto-applying gets accounts banned.
 

@@ -1,0 +1,32 @@
+# resume.yaml.example — sanitized RenderCV starter (fictional data).
+# Copy to openclaw-workspace/resume.yaml and fill with real facts.
+# Real resume.yaml is gitignored — never commit it.
+cv:
+  name: Jane Doe
+  headline: Full-Stack Developer
+  location: Rabat, Morocco
+  email: jane.doe@example.com
+  website: https://example.com
+  social_networks:
+    - network: GitHub
+      username: janedoe
+    - network: LinkedIn
+      username: janedoe
+  sections:
+    Professional Summary:
+      - Full-stack developer building web applications and AI-enabled tools.
+    Professional Experience:
+      - company: Example Corp
+        position: Full-Stack Developer
+        start_date: 2022
+        end_date: present
+        location: Remote
+        highlights:
+          - Shipped customer-facing features used by verified internal teams.
+design:
+  theme: engineeringresumes
+locale:
+  language: english
+settings:
+  render_command:
+    output_folder: .

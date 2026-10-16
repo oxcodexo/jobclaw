@@ -2,7 +2,7 @@
 data/
 *.log
 .setup-cache.json
-openclaw-workspace/resume.md
+openclaw-workspace/resume.yaml
 openclaw-workspace/DREAMS.md
 openclaw-workspace/memory/*
 openclaw-workspace/jobs/queue/*

@@ -2,3 +2,4 @@
 
 - 2026-10-10: Initialised repo. Mode: human-in-the-loop, Telegram digest, free-only models, host Firefox final send.
 - Preferences: to be learned from approvals/skips.
+- 2026-10-16: Pivot to JobClaw interactive career expert. Resume master is RenderCV YAML (workspace holds a gitignored working copy of the user's canonical master). Strict fact discipline: never invent, drafts stay draft until approved.

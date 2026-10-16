@@ -3,10 +3,10 @@
 ## The pieces
 
 ```text
-You (Telegram)  <──►  OpenClaw gateway (:18789)  ──►  9Router (:20128)  ──►  free models
+You (webchat/Telegram)  <──►  OpenClaw gateway (:18789)  ──►  9Router (:20128)  ──►  free models
    │                        │                              │
-   │                        │ cron (7:00/7:15/7:30, 18:00) │ combo: OC-free first,
-   │                        │ skills: tavily, browser      │ Kiro fallback
+   │                        │ chat-first                     │ combo: OC-free first,
+   │                        │ skills: tavily, browser,     │ fallback second
    │                        ▼                              ▼
    │                   jobs/queue/*.md               Tavily API (search/extract)
    │                   jobs/applied.json
@@ -14,15 +14,16 @@ You (Telegram)  <──►  OpenClaw gateway (:18789)  ──►  9Router (:2012
 You (host Firefox) — the only place Apply/Send is ever clicked
 ```
 
-- **OpenClaw gateway** is the agent runtime: chat channels, cron scheduler, tool surface
+- **OpenClaw gateway** is the agent runtime: chat channels, tool surface
   (57+ tools), skills, SQLite state. It owns all decisions; it never submits applications.
 - **9Router** is a local model router, not an LLM. One OpenAI-compatible endpoint, provider
   combos with fallback, per-endpoint API keys. The combo name *is* the model id
   (`jobclaw-free`).
-- **Telegram** is the only channel: digests out, links and pairing in, owner commands optional.
+- **Webchat + Telegram** are the channels: you chat, JobClaw answers.
 - **Tavily** is the discovery backbone: `tavily_search` (basic, ≤5) finds postings,
   `tavily_extract` reads them server-side — including JS-rendered pages the container
   browser cannot reach.
+- **RenderCV** (baked into the gateway image) renders tailored resume PDFs from YAML.
 
 ## Why search-first (the key design decision)
 
@@ -34,12 +35,13 @@ arms race that burns free-tier credits at ~50k tokens per failed run. So:
 2. Snippet/extract-only for hostile boards; full reads happen in the user's own browser.
 3. Container Chromium kept as fallback for bot-friendly pages only.
 
-## Cron model
+## Interaction model
 
-Three morning scan jobs + one evening digest, all `--agent main`, explicit
-`--announce --channel telegram --to <CHAT_ID>` delivery (implicit `channel: last` routing
-is refused for isolated runs), `--tz` set to the user's zone. Prompts cap scope
-(≤3 searches, ≤8 postings, capped text reads) because free models bill attention in tokens.
+Chat-first: every task starts from a user message in webchat or
+Telegram. Scopes stay small per turn (≤3 searches, ≤8 postings, capped text
+reads) because free models bill attention in tokens. Tracking files
+(`jobs/queue/`, `jobs/applied.json`) are the persistent memory across
+ephemeral chat sessions.
 
 ## Rules baked into this repo
 

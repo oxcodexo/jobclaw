@@ -40,8 +40,8 @@ gateway crash-loops after an update, read the doctor block in the logs before an
 
 | What | Where | How |
 |---|---|---|
-| Secrets + workspace config | `.env`, `openclaw-workspace/` (incl. `resume.md`) | encrypted backup of your choice, never git |
-| Gateway state (pairing, cron, sessions) | `openclaw-home` named volume (`jobclaw-openclaw-home`) | `docker run --rm -v jobclaw-openclaw-home:/source:ro -v "$PWD:/backup" alpine tar -czf /backup/openclaw-backup-$(date +%F).tar.gz -C /source .` |
+| Secrets + workspace config | `.env`, `openclaw-workspace/` (incl. `resume.yaml`) | encrypted backup of your choice, never git |
+| Gateway state (pairing, sessions) | `openclaw-home` named volume (`jobclaw-openclaw-home`) | `docker run --rm -v jobclaw-openclaw-home:/source:ro -v "$PWD:/backup" alpine tar -czf /backup/openclaw-backup-$(date +%F).tar.gz -C /source .` |
 | Tracked repo | everything else | git (see below) |
 
 Restore: stop the stack, extract into the volume, `up -d`:
@@ -59,7 +59,7 @@ Legacy note: older versions used `./data/openclaw-home/` binds. If migrating, co
 ## Git hygiene for this repo
 
 - Commit tracked config/workspace/docs changes normally.
-- Before every commit: `git status --porcelain` — `.env`, `data/`, `resume.md`, queue
+- Before every commit: `git status --porcelain` — `.env`, `data/`, `resume.yaml`, queue
   drafts and `applied.json` must never appear. If one does, stop and fix `.gitignore`.
 - Config edits flow one way into the volume: `python scripts/setup.py` for the project
   key set, `config set` for single tweaks, then restart gateway. Never hand-edit the

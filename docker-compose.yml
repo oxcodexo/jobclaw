@@ -6,7 +6,7 @@ name: jobclaw
 # The gateway/Doctor own the live copy (migrations, wizard/meta/skills state).
 # Named volumes (not binds) for runtime home: required on Windows.
 # NOTE: never file-mount openclaw.json — configure via setup.py / config set.
-# - ./openclaw-workspace      -> /home/node/.openclaw/workspace (AGENTS.md, resume.md, jobs/)
+# - ./openclaw-workspace      -> /home/node/.openclaw/workspace (AGENTS.md, resume.yaml, jobs/)
 # - ./data/9router-data    -> /app/data (9router db.json, combos, keys)
 # Inter-container model endpoint: http://9router:20128/v1
 # Host access: OpenClaw http://127.0.0.1:18789, 9Router http://127.0.0.1:20128
@@ -66,7 +66,7 @@ services:
       # Live runtime home as NAMED VOLUME (required on Windows).
       # Configure via python scripts/setup.py (fresh volumes) or config set (tweaks).
       - openclaw-home:/home/node/.openclaw
-      # Versioned workspace (AGENTS.md, resume.md, jobs/ — tracked except resume.md)
+      # Versioned workspace (AGENTS.md, resume.yaml, jobs/, skills/ — tracked except resume.yaml)
       - ./openclaw-workspace:/home/node/.openclaw/workspace
       # Persistent Chromium profiles (named volume, same reason)
       - browser-profiles:/home/node/.openclaw/browser-profiles

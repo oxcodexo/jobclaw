@@ -9,7 +9,7 @@ downloads and dashboard clicks. By the end, job digests arrive in your Telegram 
 - A **Telegram** account.
 - A free **Tavily** account (for web search): sign up at `tavily.com`, copy the API key
   from the dashboard (`tvly-...`, free tier is 1,000 credits/month).
-- A **resume in Markdown** (`resume.md`). Keep passwords and ID numbers out of it — free
+- A **resume as RenderCV YAML** (`resume.yaml`). Keep passwords and ID numbers out of it — free
   model providers may log prompts (see [free-tier limits](../explanation/free-tier-limits.md)).
 - Patience for first-time image pulls (1–2 GB).
 
@@ -42,7 +42,7 @@ Sanity check that secrets stay out of git (should print nothing tracked):
 
 ```bash
 git status --porcelain
-git check-ignore .env openclaw-workspace/resume.md data && echo "secrets ignored OK"
+git check-ignore .env openclaw-workspace/resume.yaml data && echo "secrets ignored OK"
 ```
 
 ## 2. Start the stack (one command)
@@ -140,38 +140,42 @@ docker compose exec openclaw-gateway node openclaw.mjs skills check | grep -i ta
 
 ## 6. Drop in your resume and profile
 
-1. Copy your resume to `openclaw-workspace/resume.md` (gitignored — never committed).
+1. Get your resume into `openclaw-workspace/resume.yaml` (gitignored — never
+   committed). Three ways, pick one:
+   - Copy your RenderCV master (or start from `resume.yaml.example`), or
+   - Ask JobClaw in chat: *"here's my resume"* + upload (PDF, DOCX, TXT, MD,
+     YAML) — it reads the file and builds `resume.yaml` for you, or
+   - Paste your resume text in chat and ask it to structure it.
 2. Fill `openclaw-workspace/USER.md` (replace the `YOUR_*` placeholders: roles, skills,
-   location, salary floor, links, chat ID, timezone). The agent also infers from the resume.
+   location, salary floor, links, timezone). The agent also infers from the resume.
 
-## 7. Create the scheduled jobs
+## 7. Chat with JobClaw (everything is on demand)
 
-The repo's agent instructions (`openclaw-workspace/AGENTS.md`) describe the intended jobs.
-Create them (times in `--tz`, adjust to yours):
+Open the Control UI (`http://127.0.0.1:18789`) or Telegram and talk to the
+agent. Start with:
 
-```bash
-EXE="docker compose exec -T openclaw-gateway node openclaw.mjs"
-$EXE automations add --cron "0 7 * * *" --tz Africa/Casablanca \
-  --message "Find new AI Engineer / Full-Stack postings (remote or Morocco) using tavily_search: 2 queries (basic, max 5 each) over Greenhouse/Lever boards. tavily_extract the best 4. Score 0-100 vs openclaw-workspace/resume.md, keep 70+. Write keepers to jobs/queue/YYYY-MM-DD-search-<slug>.md with score, why-fit, tailored cover letter. Skip URLs in jobs/applied.json. NEVER apply or submit." \
-  --name "Jobs: AI remote search" --agent main \
-  --announce --channel telegram --to <YOUR_CHAT_ID> --model 9router/jobclaw-free
-```
+- *"Find new AI Engineer / Full-Stack postings, remote or Morocco, posted
+  within 7 days."* — deep search with posting-date evidence, keepers
+  (70+) queued to `jobs/queue/` with score, why-fit, tailored cover letter.
+- *"Tailor my resume for <job URL>."* — JD analysis, tailored `resume.yaml`
+  + PDF beside the queue draft, marked draft until you approve.
+- *"Cover letter for <job>"*, *"interview prep for <job>"*,
+  *"digest"* (queue summary), *"log applied <job>"*.
+- Paste any job URL anytime: *"Score this and draft a cover letter."*
 
-Repeat for LinkedIn (`15 7 * * *`, `site:linkedin.com/jobs` snippets) and Upwork
-(`30 7 * * *`, `site:upwork.com` gigs, never submit), plus an evening digest
-(`0 18 * * 1-5`). See [daily workflow](../how-to/daily-workflow.md) for the full prompts.
+See [daily workflow](../how-to/daily-workflow.md) for all flows.
 
 ## 8. Test end-to-end, then go live
 
+Ask for a fresh search in chat, then check the queue:
+
 ```bash
-# run the morning job right now and wait for the result:
-docker compose exec -T openclaw-gateway node openclaw.mjs automations run <JOB_ID> \
-  --wait --wait-timeout 12m --poll-interval 5s
 ls openclaw-workspace/jobs/queue/
 ```
 
-You should get a Telegram digest plus draft files in `jobs/queue/`. Review a draft, apply
-from your own browser, and tell the bot what you sent so it stays tracked.
+You should get drafts in `jobs/queue/` (plus tailored resume PDFs beside
+them). Review a draft, apply from your own browser, and tell the bot what
+you sent so it stays tracked.
 
 ## 9. When something breaks
 

@@ -1,4 +1,5 @@
-# OpenClaw gateway + headless Chromium for agent browsing (job boards are JS-heavy).
+# OpenClaw gateway + headless Chromium for agent browsing (job boards are JS-heavy)
+# + RenderCV (resume PDF builds via the rendercv agent skill).
 # Rebuild after upstream updates: docker compose up -d --build openclaw-gateway
 # Pinned base for reproducibility; float with:
 #   docker compose build --build-arg OPENCLAW_BASE=ghcr.io/openclaw/openclaw:<tag> openclaw-gateway
@@ -7,8 +8,18 @@ FROM ${OPENCLAW_BASE}
 
 USER root
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends chromium \
+  && apt-get install -y --no-install-recommends chromium curl ca-certificates \
   && rm -rf /var/lib/apt/lists/* \
   && which chromium
 
 USER node
+
+# RenderCV via uv, installed as `node` (the runtime user): the tool venvs live
+# under /home/node and stay readable at runtime. uv fetches its own
+# Python 3.14 (base image only has 3.11); pin matches the proven personal
+# setup: rendercv[full]==2.8.
+ENV PATH="/home/node/.local/bin:${PATH}" \
+    UV_TOOL_BIN_DIR="/home/node/.local/bin"
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh \
+  && uv tool install --python 3.14 "rendercv[full]==2.8" \
+  && rendercv --version

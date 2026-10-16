@@ -17,7 +17,7 @@ Measured burn: a capped scan run costs ~30–55k LLM input tokens; the combo's f
 Free inference endpoints generally log prompts and may train on them (OpenRouter states
 this for free models; assume it everywhere free). Rules:
 
-- `resume.md` must contain no passwords, ID numbers, or full street address.
+- `resume.yaml` must contain no passwords, ID numbers, or full street address.
 - Secrets live only in `.env` / gateway env — never in prompts, drafts, issues, or logs.
 - This tradeoff was explicitly accepted for this project; re-decide for yours.
 

@@ -10,7 +10,7 @@
 | `NINE_ROUTER_PASSWORD` | yes | 9Router dashboard login (replaces default `123456`) |
 | `NINE_ROUTER_API_KEY` | yes | 9Router endpoint key (see [free models](../how-to/free-models-9router.md)) |
 | `TAVILY_API_KEY` | yes | Tavily search key (`tvly-...`, free 1,000 credits/mo) |
-| `TZ` | no | cron timezone, default `UTC` (example: `Africa/Casablanca`) |
+| `TZ` | no | container timezone, default `UTC` (example: `Africa/Casablanca`) |
 | `OPENCLAW_PORT` / `NINE_ROUTER_PORT` | no | host ports, defaults `18789` / `20128` |
 | `OPENCLAW_BASE` / `NINE_ROUTER_IMAGE` | no | image overrides (base used at gateway build time; 9Router used at pull time). Gateway and `--profile cli` share the locally built image — always `--build` + repull together and check `--version` parity |
 

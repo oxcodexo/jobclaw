@@ -2,17 +2,20 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-A self-hosted AI job finder: **OpenClaw** agent + **9Router** free-model routing + **Tavily**
-search + **Telegram** digests, all in Docker. It finds postings, scores them against your
-resume, and drafts tailored cover letters — and it **never applies on your behalf**
+A self-hosted AI career expert: **OpenClaw** agent + **9Router** free-model routing + **Tavily**
+search + **RenderCV** resume builds + **Telegram** chat, all in Docker. It finds new postings,
+scores them against your resume, tailors your resume per job as PDF, and drafts cover
+letters — and it **never applies on your behalf**
 (human-in-the-loop; auto-applying gets accounts banned — see
 [free-tier limits](docs/explanation/free-tier-limits.md)).
 
 ## How it works (30 seconds)
 
-Morning cron jobs search AI/full-stack postings (Greenhouse/Lever boards, LinkedIn and
-Upwork snippets), extract descriptions, score 0–100 vs your `resume.md`, and queue drafts
-to `jobs/queue/` with why-fit notes. Digests land in Telegram. You review, you click Send
+Chat with JobClaw from the web UI or Telegram: it finds new postings
+(Greenhouse/Lever boards, LinkedIn and Upwork snippets — always with
+posting-date evidence), extracts descriptions, scores 0–100 vs your
+`resume.yaml`, tailors your resume per job (RenderCV PDF), and drafts cover
+letters. Digests come on demand (`digest`). You review, you click Send
 in your own browser, you tell the bot what went out.
 
 ## Quickstart
@@ -33,7 +36,8 @@ Start there — this README is the map, the tutorial is the road.
 - 9Router free providers: Kiro AI (~50 credits/mo) + OpenCode Free (see
   [free models](docs/how-to/free-models-9router.md))
 - Tavily key (1,000 free credits/mo — see [Tavily setup](docs/how-to/tavily-search.md))
-- Your resume as `resume.md` (gitignored, never committed)
+- Your resume as RenderCV YAML (`openclaw-workspace/resume.yaml`, gitignored, never committed —
+  copy your master or start from `resume.yaml.example`)
 
 ## Docs
 
@@ -48,10 +52,10 @@ Start there — this README is the map, the tutorial is the road.
 
 ## Safety rules (non-negotiable)
 
-1. `.env`, `data/`, `resume.md`, queue drafts and `applied.json` are gitignored — verify
+1. `.env`, `data/`, `resume.yaml`, queue drafts and `applied.json` are gitignored — verify
    with `git status` before every commit.
 2. The agent drafts only. (See [platform risks](docs/explanation/free-tier-limits.md).)
-3. Free models may log prompts — keep IDs/passwords out of `resume.md`.
+3. Free models may log prompts — keep IDs/passwords out of `resume.yaml`.
 
 ## Contributing
 

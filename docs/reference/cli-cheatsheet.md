@@ -23,7 +23,6 @@ docker compose down
 ```bash
 python scripts/setup.py            # full guided setup (build, seed, apply, verify)
 python scripts/setup.py --check    # diff desired keys vs live, no writes
-scripts/check-queue.sh          # pending draft count (JSON, for --command jobs)
 ```
 
 ## Gateway / pairing / channels
@@ -60,20 +59,18 @@ $EXE skills check | grep -i tavily
 $EXE plugins install @openclaw/tavily-plugin
 ```
 
-## Automations (cron)
+## Automations (manual probes only)
+
+JobClaw runs everything on demand from chat.
+The commands below are kept for manual one-shot probes only:
 
 ```bash
-$EXE automations add --cron "0 7 * * *" --tz Africa/Casablanca --message "<prompt>" \
-  --name "<name>" --agent main --announce --channel telegram --to <CHAT_ID> \
-  --model 9router/jobclaw-free
 $EXE automations add --at 3m --message "<prompt>" --name "<tmp>" --agent main \
   --announce --channel telegram --to <CHAT_ID> --model 9router/jobclaw-free  # one-shot test
 $EXE automations list
 $EXE automations show <ID>
 $EXE automations runs <ID>                  # run history
 $EXE automations run <ID> --wait --wait-timeout 12m --poll-interval 5s
-$EXE automations edit <ID> --message "<new prompt>"   # also: --model, --to, --cron, --disable/--enable
-$EXE automations disable <ID> | automations enable <ID>
 $EXE automations rm <ID>
 ```
 
@@ -81,7 +78,7 @@ $EXE automations rm <ID>
 
 ```bash
 $EXE sessions list --all-agents --json
-$EXE sessions tail --session-key "agent:main:cron:<JOB_ID>" --tail 30
+$EXE sessions tail --session-key "agent:main:<SESSION_KEY>" --tail 30
 $EXE sessions export-trajectory --session-key "<KEY>"   # bundle lands in container .openclaw/
 ```
 

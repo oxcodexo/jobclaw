@@ -9,14 +9,14 @@ jobclaw/
 ├── scripts/
 │   ├── setup.py              # cross-platform setup (build, seed, apply, verify; --check/--verify/--check-versions)
 │   ├── desired-config.json   # desired live keys -> openclaw-home volume (additive, idempotent)
-│   └── check-queue.sh        # queue-depth probe for --command cron jobs
 ├── openclaw-workspace/       # bind-mounted as the agent workspace
 │   ├── AGENTS.md             # agent operating instructions (injected every session)
 │   ├── SOUL.md / IDENTITY.md # persona
 │   ├── USER.md               # YOUR profile (placeholders in template)
 │   ├── MEMORY.md             # long-term memory seed
-│   ├── resume.md             # YOUR resume (gitignored — you create it)
-│   ├── resume.example.md     # shape reference
+│   ├── resume.yaml           # YOUR working master, RenderCV (gitignored — copy from resume.yaml.example)
+│   ├── resume.yaml.example   # sanitized shape reference
+│   ├── skills/               # agent skills (rendercv + career suite, versioned)
 │   └── jobs/
 │       ├── queue/            # drafts (gitignored runtime state)
 │       ├── applied.json      # sent URLs (gitignored runtime state)
@@ -43,7 +43,7 @@ jobclaw/
   `docker compose exec openclaw-gateway sh -c 'ls -la /home/node/.openclaw'`.
   Back up with `docker run --volumes-from` (see [update](../how-to/update.md)).
 - **Workspace is live *and* tracked.** `openclaw-workspace/` holds both versioned prompt
-  files (`AGENTS.md`, …) and your private runtime (`resume.md`, queue, applied log).
+  files (`AGENTS.md`, …) and your private runtime (`resume.yaml`, queue, applied log).
   `.gitignore` draws the line — check it after any change.
 - **`data/` is entirely gitignored.** It contains credentials, sessions, and SQLite state.
   Back it up encrypted, never commit it.

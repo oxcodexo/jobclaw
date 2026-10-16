@@ -39,5 +39,5 @@ git status --porcelain
 grep -rnE "tvly-|sk-[A-Za-z0-9_-]{10,}" --exclude-dir=data --exclude-dir=.git --exclude=.env . | grep -v "^./docs" || echo "clean"
 ```
 
-`.env`, `data/`, `openclaw-workspace/resume.md`, queue drafts and `applied.json` are all
+`.env`, `data/`, `openclaw-workspace/resume.yaml`, queue drafts and `applied.json` are all
 gitignored — confirm with `git check-ignore <path>` after any repo change.
