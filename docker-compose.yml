@@ -2,11 +2,10 @@ name: jobclaw
 
 # OpenClaw Gateway + 9Router.
 # Live config lives in the openclaw-home volume, managed additively via
-# scripts/bootstrap.sh (desired keys) and `config set` (single tweaks).
+# scripts/setup.py (desired keys in scripts/desired-config.json) and `config set` (single tweaks).
 # The gateway/Doctor own the live copy (migrations, wizard/meta/skills state).
-#   Named (not bind) so Windows Docker Desktop file sharing (no fchmod/hardlink/SQLite primitives)
-#   doesn't crash Doctor (exit 78 / EPERM / staged-publish). See docs/explanation/architecture.md.
-# NOTE: openclaw.json is NOT file-mounted (atomic rewrites fail with EBUSY on file binds).
+# Named volumes (not binds) for runtime home: required on Windows.
+# NOTE: never file-mount openclaw.json — configure via setup.py / config set.
 # - ./openclaw-workspace      -> /home/node/.openclaw/workspace (AGENTS.md, resume.md, jobs/)
 # - ./data/9router-data    -> /app/data (9router db.json, combos, keys)
 # Inter-container model endpoint: http://9router:20128/v1
@@ -14,7 +13,7 @@ name: jobclaw
 
 services:
   9router:
-    image: ${NINE_ROUTER_IMAGE:-decolua/9router:0.5.95}
+    image: ${NINE_ROUTER_IMAGE:-decolua/9router:0.5.104}
     container_name: jobclaw-9router
     hostname: jobclaw-9router
     restart: unless-stopped
@@ -64,13 +63,12 @@ services:
       # Tavily web search (free 1000 credits/mo) - auto-detected by OpenClaw
       - TAVILY_API_KEY=${TAVILY_API_KEY:-}
     volumes:
-      # Live runtime home as NAMED VOLUME (newer images do fchmod/atomic staged publishes
-      # that fail with EPERM on Windows bind mounts). Workspace stays bind-mounted.
-      # Configure via scripts/bootstrap.sh (fresh volumes) or config set (tweaks).
+      # Live runtime home as NAMED VOLUME (required on Windows).
+      # Configure via python scripts/setup.py (fresh volumes) or config set (tweaks).
       - openclaw-home:/home/node/.openclaw
       # Versioned workspace (AGENTS.md, resume.md, jobs/ — tracked except resume.md)
       - ./openclaw-workspace:/home/node/.openclaw/workspace
-      # Persistent Chromium profiles (named volume for same Windows-perms reason)
+      # Persistent Chromium profiles (named volume, same reason)
       - browser-profiles:/home/node/.openclaw/browser-profiles
     networks:
       - jobclaw
@@ -87,6 +85,23 @@ services:
       - ./openclaw-workspace:/home/node/.openclaw/workspace
     environment:
       - TZ=${TZ:-UTC}
+    entrypoint: ["node", "openclaw.mjs"]
+
+  # One-shot setup (stable hostname, same home volume as the gateway).
+  # Used by scripts/setup.py to seed fresh volumes with the gateway stopped.
+  # Usage: docker compose run --rm openclaw-setup <openclaw args>
+  # (entrypoint is already `node openclaw.mjs` — do NOT prefix it again).
+  openclaw-setup:
+    image: jobclaw-openclaw:latest
+    profiles: ["setup"]
+    hostname: jobclaw-openclaw
+    volumes:
+      - openclaw-home:/home/node/.openclaw
+      - ./openclaw-workspace:/home/node/.openclaw/workspace
+    environment:
+      - TZ=${TZ:-UTC}
+    networks:
+      - jobclaw
     entrypoint: ["node", "openclaw.mjs"]
 
 networks:

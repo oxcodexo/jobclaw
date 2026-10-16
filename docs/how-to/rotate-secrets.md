@@ -7,7 +7,8 @@ Order matters: revoke provider-side first, then replace locally.
 
 1. **@BotFather** → `/revoke` → your bot → copy the new token.
 2. `.env`: `TELEGRAM_BOT_TOKEN=<new>`.
-3. `docker compose restart openclaw-gateway`, message the bot to confirm.
+3. `docker compose up -d --force-recreate openclaw-gateway` (env-only changes need a
+   recreate, plain `restart` keeps the old environment), message the bot to confirm.
 4. Note: your chat ID does not change on revoke.
 
 ## 9Router endpoint key

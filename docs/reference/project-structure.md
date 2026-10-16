@@ -7,7 +7,8 @@ jobclaw/
 ├── .env                      # YOUR secrets (gitignored — copy from .env.example)
 ├── .env.example              # placeholder vars for new clones
 ├── scripts/
-│   ├── bootstrap.sh          # desired live keys -> openclaw-home volume (additive, idempotent)
+│   ├── setup.py              # cross-platform setup (build, seed, apply, verify; --check/--verify/--check-versions)
+│   ├── desired-config.json   # desired live keys -> openclaw-home volume (additive, idempotent)
 │   └── check-queue.sh        # queue-depth probe for --command cron jobs
 ├── openclaw-workspace/       # bind-mounted as the agent workspace
 │   ├── AGENTS.md             # agent operating instructions (injected every session)
@@ -31,19 +32,14 @@ jobclaw/
 
 - **Live config, no tracked copy.** The gateway only reads `openclaw.json` inside the
   `openclaw-home` named volume, which OpenClaw's doctor rewrites (migrations, backups).
-  Project keys are applied additively via `scripts/bootstrap.sh` (desired key set, `--check`
-  shows drift); single tweaks go through `config set`. There is intentionally no tracked
+  Project keys are applied additively via `python scripts/setup.py` (desired key set in
+  `scripts/desired-config.json`, `--check` shows drift); single tweaks go through `config set`. There is intentionally no tracked
   config file — full-file syncs clobber Doctor-managed keys (`wizard/meta/skills/owner`).
   Never edit the live copy by hand.
-- **Why `openclaw.json` is never mounted in.** Three mount variants, three failures:
-  file bind → atomic rewrites fail `EBUSY`; symlink/dir tricks → renames replace the link
-  and the live file silently detaches from your host copy; whole-home bind → Doctor
-  crash-loops on Windows (`EPERM`/`FsSafeError`, exit 78). Named volume + `config set`
-  is the only safe combination.
+- **Why `openclaw.json` is never mounted in.** Only named volume + `config set`
+  keeps the live file consistent. Never edit it by hand.
 - **Named volumes for state.** `openclaw-home` (`jobclaw-openclaw-home`) and
-  `browser-profiles` are named volumes so Doctor's `fchmod`/atomic staged publishes work
-  on Windows Docker Desktop (binds crash-loop with `EPERM`/`FsSafeError`, exit 78).
-  Volumes live in the Linux VM on native ext4. Inspect with
+  `browser-profiles` are named volumes. Inspect with
   `docker compose exec openclaw-gateway sh -c 'ls -la /home/node/.openclaw'`.
   Back up with `docker run --volumes-from` (see [update](../how-to/update.md)).
 - **Workspace is live *and* tracked.** `openclaw-workspace/` holds both versioned prompt

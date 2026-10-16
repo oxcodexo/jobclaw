@@ -9,7 +9,7 @@ Job-board scraping is bot-walled, so discovery runs on Tavily search + extractio
 TAVILY_API_KEY=<key-from-tavily.com-dashboard>
 ```
 
-`docker-compose.yml` already passes it to the gateway, and `scripts/bootstrap.sh`
+`docker-compose.yml` already passes it to the gateway, and `python scripts/setup.py`
 already sets the plugin + provider keys (key comes from env, never from tracked files):
 
 ```json

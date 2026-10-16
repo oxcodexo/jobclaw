@@ -2,34 +2,31 @@
 
 9Router is a local model router (dashboard at http://127.0.0.1:20128). It sits between
 OpenClaw and free providers so one OpenAI-compatible endpoint serves many models with
-fallback. 9Router itself never bills you.
+fallback. 9Router itself never bills you. Requires 9Router 0.5.104+ (OpenCode-pool
+fixes); check with `python scripts/setup.py --check-versions`.
 
 ## 1. Log in to the dashboard
 
 - URL: http://127.0.0.1:20128
-- Password: `NINE_ROUTER_PASSWORD` from `.env` (set via `INITIAL_PASSWORD` in compose —
-  the default `123456` is rejected for browser access because the dashboard sees Docker
-  bridge traffic as "remote").
+- Password: `NINE_ROUTER_PASSWORD` from `.env`.
 
 ## 2. Connect providers (Providers page)
 
-- **Kiro AI** → **Connect** → OAuth with AWS Builder ID (free), Google, or GitHub.
-  Free tier ≈ 50 credits/month (new accounts also get trial credits). Tokens auto-refresh.
 - **OpenCode Free** → **Connect** (one click, no auth; model list varies over time).
-
-> Known limitation (verified): tool calls routed through Kiro can corrupt
-> (`Kiro tool input must be valid object JSON`) and free-tier prompts can time out. Chat
-> works; agentic work is unreliable on `kr/*`. Prefer OpenCode Free models first in the
-> combo and keep Kiro as fallback. See [free-tier limits](../explanation/free-tier-limits.md).
+- **Kiro AI** → **Connect** → OAuth with AWS Builder ID (free), Google, or GitHub
+  (≈ 50 credits/month free). Fallback pool; tool calls through Kiro can be flaky.
 
 ## 3. Build the combo (Combo page)
 
-Create `jobclaw-free`, add models highest-priority first. Proven order:
+Create `jobclaw-free`, most reliable first:
 
-1. `oc/muse-spark-...` (OpenCode Free — tool calls verified working)
-2. Other `oc/*` / `mmf/*` free models
-3. `kr/*` non-thinking models (fallback)
-4. `kr/*-thinking*` last (accurate but burns credits fast)
+1. `oc/muse-spark-1.3-contributor-free`
+2. `oc/muse-spark-1.2-contributor-free`
+3. `kr/*` non-thinking models (needs Kiro connected)
+4. `kr/*-thinking*` last (burns credits fast)
+
+Only add a member after it answers a real chat call — appearing in `/v1/models`
+does not mean it works.
 
 ## 4. Create the endpoint key, plug it in
 
@@ -42,26 +39,22 @@ NINE_ROUTER_API_KEY=<key-from-dashboard>
 Apply + verify (key stays in `.env`, never in git):
 
 ```bash
-docker compose up -d
-curl -s -H "Authorization: Bearer $NINE_ROUTER_API_KEY" \
-  http://127.0.0.1:20128/v1/models | python3 -c \
-  "import json,sys; [print('-',m['id']) for m in json.load(sys.stdin).get('data',[])]"
-```
-
-You should see `jobclaw-free` plus provider models. Then prove inference end-to-end
-through OpenClaw (not just 9Router):
-
-```bash
-docker compose exec openclaw-gateway node openclaw.mjs infer model run \
+docker compose up -d --force-recreate openclaw-gateway   # .env changed: recreate, not restart
+python scripts/setup.py --verify   # per-member OK/FAIL, exits non-zero until one answers
+docker compose exec openclaw-gateway node openclaw.mjs infer model run --gateway \
   --model 9router/jobclaw-free --prompt "Reply with exactly: GATEWAY_OK" --json
+# expect: "outputs": [{"text": "GATEWAY_OK", ...}]
 ```
+
+Always verify with `--gateway` (same path the agent uses). Bare `infer model run`
+takes the local path and 401s even on a healthy stack — ignore that 401.
 
 ## When it fails
 
-| Symptom | Cause | Fix |
-|---|---|---|
-| Dashboard rejects `123456` | bridge-network access requires custom password | set `NINE_ROUTER_PASSWORD`, `docker compose up -d --force-recreate 9router` |
-| New password rejected too | `INITIAL_PASSWORD` only seeds fresh DBs | `docker compose down`, delete `data/9router-data/*` contents, `up -d` |
-| `/v1/models` → `API key required` | expected without key | create endpoint key (step 4) |
-| `kr/*` tool timeouts / integrity errors | Kiro bridge limits | reorder combo OC-first (step 3) |
-| `oc/*` models missing from list | provider not synced | dashboard → Providers → refresh/reconnect OpenCode Free |
+| Symptom | Fix |
+|---|---|
+| Dashboard rejects login | set `NINE_ROUTER_PASSWORD`, `docker compose up -d --force-recreate 9router` (default `123456` is rejected over the Docker bridge; `INITIAL_PASSWORD` only seeds fresh DBs, otherwise wipe `data/9router-data/` and `up -d`) |
+| `404 No active credentials for provider: X` | Providers → Connect X, then retry |
+| `403 FreeTierError` on `oc/*` | upgrade 9Router (`--check-versions`, then bump `NINE_ROUTER_IMAGE`) |
+| `400 Unsupported model <slug>` | remove that member from the combo |
+| `--verify` all FAIL | connect a provider first, then use only members that answer |

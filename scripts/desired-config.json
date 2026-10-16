@@ -1,0 +1,25 @@
+{
+  "gateway.mode": "local",
+  "gateway.bind": "lan",
+  "gateway.port": 18789,
+  "browser.noSandbox": true,
+  "models.providers.9router.baseUrl": "http://9router:20128/v1",
+  "models.providers.9router.apiKey": "${NINE_ROUTER_API_KEY}",
+  "models.providers.9router.api": "openai-completions",
+  "models.providers.9router.request.allowPrivateNetwork": true,
+  "models.providers.9router.models": [
+    {
+      "id": "jobclaw-free",
+      "name": "jobclaw-free"
+    }
+  ],
+  "agents.defaults.workspace": "/home/node/.openclaw/workspace",
+  "agents.defaults.model.primary": "9router/jobclaw-free",
+  "agents.defaults.modelPolicy.allow": [
+    "9router/jobclaw-free"
+  ],
+  "channels.telegram.enabled": true,
+  "channels.telegram.dmPolicy": "pairing",
+  "plugins.entries.tavily.enabled": true,
+  "tools.web.search.provider": "tavily"
+}

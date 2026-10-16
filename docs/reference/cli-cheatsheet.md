@@ -1,8 +1,6 @@
 # Reference: CLI cheatsheet
 
-Run from the repo root. `EXEC` targets the running gateway (same identity — state-safe).
-Avoid `docker compose run` for state-writing commands: one-shot containers carry random
-hostnames and can trip OpenClaw's state-ownership check.
+Run from the repo root. State-changing commands go through `EXEC` (same container).
 
 ```bash
 EXE="docker compose exec -T openclaw-gateway node openclaw.mjs"
@@ -16,7 +14,6 @@ docker compose up -d --build openclaw-gateway # rebuild Chromium layer
 docker compose up -d --force-recreate <svc>   # reload changed env vars
 docker compose ps
 docker compose logs -f openclaw-gateway
-docker compose logs --since 10m openclaw-gateway | grep -iE "could not be verified|Failing check|failed to start|invalid"
 docker compose stop openclaw-gateway
 docker compose down
 ```
@@ -24,8 +21,8 @@ docker compose down
 ## Config
 
 ```bash
-scripts/bootstrap.sh            # apply project keys to openclaw-home volume (additive, idempotent)
-scripts/bootstrap.sh --check    # diff desired keys vs live, no writes
+python scripts/setup.py            # full guided setup (build, seed, apply, verify)
+python scripts/setup.py --check    # diff desired keys vs live, no writes
 scripts/check-queue.sh          # pending draft count (JSON, for --command jobs)
 ```
 
@@ -40,8 +37,10 @@ $EXE channels status --probe
 ## Models
 
 ```bash
-$EXE infer model run --model 9router/jobclaw-free \
+$EXE infer model run --gateway --model 9router/jobclaw-free \
   --prompt "Reply with exactly: GATEWAY_OK" --json
+# --gateway = same path the agent uses. Bare `infer` runs local and 401s on
+# healthy stacks (different auth resolution) — that 401 means nothing.
 ```
 
 ## Browser

@@ -44,10 +44,12 @@ curl -s -X POST "https://api.telegram.org/bot<TOKEN>/sendMessage" \
 
 ## 4. Pair the bot with the gateway
 
-Restart so the gateway picks up `.env`, message the bot, then approve (codes expire in 1h):
+Recreate so the gateway picks up `.env` (plain `restart` keeps the old
+environment — only a recreate reloads env), message the bot, then approve
+(codes expire in 1h):
 
 ```bash
-docker compose restart openclaw-gateway
+docker compose up -d --force-recreate openclaw-gateway
 # send any message to the bot, then:
 docker compose exec openclaw-gateway node openclaw.mjs pairing list telegram
 docker compose exec openclaw-gateway node openclaw.mjs pairing approve telegram <CODE>

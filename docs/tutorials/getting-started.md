@@ -45,42 +45,34 @@ git status --porcelain
 git check-ignore .env openclaw-workspace/resume.md data && echo "secrets ignored OK"
 ```
 
-## 2. Start the stack
+## 2. Start the stack (one command)
+
+Same command on PowerShell, CMD, Git Bash, macOS, Linux (needs Python 3.9+,
+Docker 24+ with the Compose plugin). First run pulls images and builds a small
+Chromium layer — 5–10 minutes, mostly waiting. The script also creates `.env`
+from `.env.example` (random tokens), checks upstream versions, seeds
+`gateway.mode` on fresh volumes, waits for `gateway ready`, applies the project
+config, and restarts:
 
 ```bash
-docker compose build openclaw-gateway   # builds the gateway+CLI image (base + Chromium)
-docker compose up -d
-docker compose ps
+python scripts/setup.py
 ```
 
-First run pulls the 9Router image and builds a small Chromium layer for the gateway —
-this can take 5–10 minutes. (Plain `up -d` does not build; the gateway and `--profile cli`
-one-shots both run the locally built `jobclaw-openclaw:latest`, so build first.)
-It also creates two named volumes (`jobclaw-openclaw-home`, `jobclaw-browser-profiles`) —
-runtime home lives there, not in `./data/`, so Windows binds don't crash Doctor. Expected state:
+Preview without writes, or check version pins against upstream:
+
+```bash
+python scripts/setup.py --check            # drift vs desired keys, no writes
+python scripts/setup.py --check-versions   # pinned vs newest 9Router/OpenClaw, no writes
+```
+
+It also creates two named volumes (`jobclaw-openclaw-home`,
+`jobclaw-browser-profiles`) — runtime home lives there, not in `./data/`.
+Expected state afterwards:
 
 ```bash
 docker compose ps
 # jobclaw-9router    Up (healthy)   0.0.0.0:20128->20128/tcp
 # jobclaw-openclaw   Up             0.0.0.0:18789->18789/tcp
-```
-
-Fresh volumes need `gateway.mode` seeded once (empty home blocks start otherwise):
-
-```bash
-docker compose exec -T openclaw-gateway node openclaw.mjs config set gateway.mode local
-# if the gateway is maintenance-locked: docker compose stop openclaw-gateway, then one-shot:
-# docker run --rm --hostname jobclaw-openclaw -v jobclaw-openclaw-home:/home/node/.openclaw \
-#   ghcr.io/openclaw/openclaw:2026.9.9 node openclaw.mjs config set gateway.mode local
-# then: docker compose up -d
-```
-
-Seed the project config into the volume (additive — safe to re-run, verifies with `--check`):
-
-```bash
-scripts/bootstrap.sh --check   # show drift vs desired keys, no writes
-scripts/bootstrap.sh           # apply
-docker compose restart openclaw-gateway
 ```
 
 Key URLs (all local):
@@ -99,16 +91,17 @@ Full walkthrough: [free models via 9Router](../how-to/free-models-9router.md). S
 2. **Providers** → connect **Kiro AI** (OAuth via AWS Builder ID / Google / GitHub —
    ~50 credits/month free) and **OpenCode Free** (one click, no auth).
 3. **Combo** → create `jobclaw-free`, add free models with the most reliable first
-   (e.g. `oc/muse-spark-...`, then Kiro non-thinking models; keep `-thinking` variants last —
-   they burn credits fast).
+   (Kiro non-thinking models if OpenCode Free 403s for you — verify each member
+   answers a real chat call, not just appears in `/v1/models`; details in the
+   [full walkthrough](../how-to/free-models-9router.md#3-build-the-combo-combo-page)).
+   Keep `-thinking` variants last — they burn credits fast.
 4. **Endpoint / API keys** → create key (e.g. name `openclaw`), copy it into `.env` as
    `NINE_ROUTER_API_KEY` (replacing the `placeholder-change-me...` boot value).
-5. Apply and verify the key answers:
+5. Apply and prove inference (listing is not proof — each member must answer):
 
 ```bash
-docker compose up -d
-curl -s -H "Authorization: Bearer $NINE_ROUTER_API_KEY" \
-  http://127.0.0.1:20128/v1/models | head -c 400
+docker compose up -d --force-recreate openclaw-gateway   # .env changed: recreate, not restart
+python scripts/setup.py --verify
 ```
 
 ## 4. Connect Telegram
@@ -119,23 +112,24 @@ Full walkthrough: [Telegram setup](../how-to/telegram-setup.md). Short version:
 2. Open `t.me/<your-bot>` → **Start**, send `hi`.
 3. Get your numeric chat ID (message **@userinfobot**, or Bot API `getUpdates` on your own
    bot) → `.env` as `TELEGRAM_ALLOWED_CHAT_IDS`.
-4. Restart the gateway, message the bot again, approve pairing:
+4. Recreate the gateway (`.env` changed — plain `restart` would keep the old
+   environment), message the bot again, approve pairing:
 
 ```bash
-docker compose restart openclaw-gateway
+docker compose up -d --force-recreate openclaw-gateway
 # (send any message to the bot first)
 docker compose exec openclaw-gateway node openclaw.mjs pairing list telegram
 docker compose exec openclaw-gateway node openclaw.mjs pairing approve telegram <CODE>
 ```
 
-> Always run state-writing CLI commands with `docker compose exec` (same container identity).
-> Separate CLI containers with random hostnames corrupt OpenClaw's state-ownership check —
-> see [troubleshooting](#8-when-something-breaks).
+> Run state-changing CLI commands with `docker compose exec` (same container).
+> Rule of thumb: `.env` changed → `up -d --force-recreate`; config changed →
+> `restart`; neither works → `ps` + `logs --tail 30` first.
 
 ## 5. Enable Tavily search
 
 Full walkthrough: [Tavily search](../how-to/tavily-search.md). Short version (key already in
-`.env`, plugin entry applied by `scripts/bootstrap.sh`):
+`.env`, plugin entry applied by `python scripts/setup.py`):
 
 ```bash
 docker compose up -d --force-recreate openclaw-gateway
@@ -182,10 +176,7 @@ from your own browser, and tell the bot what you sent so it stays tracked.
 ## 9. When something breaks
 
 - `docker compose ps` + `docker compose logs --tail 30 openclaw-gateway` first.
-- `error lines` hunt: `docker compose logs --since 10m openclaw-gateway | grep -iE "could not be verified|Failing check|failed to start|invalid"`.
-- State-ownership errors after running CLI from another container: stop the gateway, run
-  management commands only via `docker compose exec`, restart. Full story:
-  [architecture](../explanation/architecture.md).
+- `python scripts/setup.py --check` (config drift) and `--verify` (inference path).
 
 ## Next steps
 

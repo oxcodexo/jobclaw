@@ -2,15 +2,17 @@
 
 ## Update images
 
-# Pinned tags (validated combo — OpenClaw 2026.9.9 + 9Router 0.5.95).
+# Pinned tags (validated combo — OpenClaw 2026.9.9 + 9Router 0.5.104).
 # Bump deliberately, never float on :latest (surprise schema breaks).
 # To bump: update the tags in .env.example + .env (OPENCLAW_BASE,
 # NINE_ROUTER_IMAGE) + Dockerfile.gateway ARG default + docker-compose.yml
-# defaults, then follow this same procedure. (Old OPENCLAW_IMAGE var is
-# no longer used — gateway and CLI share the locally built image.)
+# defaults + scripts/setup.py PINNED_* + docs pins, then follow this same
+# procedure. (Old OPENCLAW_IMAGE var is no longer used — gateway and CLI
+# share the locally built image.)
+# Check first: python scripts/setup.py --check-versions
 
 ```bash
-docker pull decolua/9router:0.5.95
+docker pull decolua/9router:0.5.104
 docker compose up -d --build openclaw-gateway
 docker compose up -d
 docker compose ps
@@ -59,6 +61,6 @@ Legacy note: older versions used `./data/openclaw-home/` binds. If migrating, co
 - Commit tracked config/workspace/docs changes normally.
 - Before every commit: `git status --porcelain` — `.env`, `data/`, `resume.md`, queue
   drafts and `applied.json` must never appear. If one does, stop and fix `.gitignore`.
-- Config edits flow one way into the volume: `scripts/bootstrap.sh` for the project
+- Config edits flow one way into the volume: `python scripts/setup.py` for the project
   key set, `config set` for single tweaks, then restart gateway. Never hand-edit the
   live copy in the volume (doctor rewrites it).

@@ -41,25 +41,16 @@ Three morning scan jobs + one evening digest, all `--agent main`, explicit
 is refused for isolated runs), `--tz` set to the user's zone. Prompts cap scope
 (≤3 searches, ≤8 postings, capped text reads) because free models bill attention in tokens.
 
-## Operational lessons baked into this repo
+## Rules baked into this repo
 
-- **State ownership.** OpenClaw attests `state/openclaw.sqlite` to the writer identity.
-  Stable container `hostname:` + management exclusively via `docker compose exec` (same
-  container) keeps it clean. One-shot CLI containers with random hostnames poison it into
-  a crash loop (`could not be verified`); recovery is stop → move `state/` aside → boot
-  fresh → re-pair. Details in [configuration](configuration.md).
-- **Config migrations.** Doctor rewrites the live config across versions
-  (provider schema `models.providers.*.models[]`, `meta.migrations.*`). Keep the tracked
-  base current; read doctor blocks after every update. `agents.defaults.modelPolicy.allow`
-  is still the override allowlist (do not delete); custom providers need at least one
-  `models[]` entry with matching `id` (we ship `{id,name}`).
-- **File mounts vs rewrites.** Never bind-mount `openclaw.json` as a file — atomic
-  renames fail with `EBUSY`. Configure via `scripts/bootstrap.sh` / `config set` instead —
-  never mount the file in.
-- **Binds vs named volumes.** `/home/node/.openclaw` and browser profiles live in named
-  volumes, not Windows binds: newer images do `fchmod`/atomic staged publishes that fail
-  with `EPERM`/`FsSafeError` on Docker Desktop file sharing and crash-loop Doctor
-  (exit 78). Volumes live in the Linux VM on native ext4. Workspace stays bind-mounted
-  (plain markdown, no chmod path). Same reason `9router-data` bind is fine.
-- **Env needs recreate.** `docker compose restart` does not reload environment; use
-  `up -d --force-recreate <service>`.
+- **State ownership.** Manage the gateway only via `docker compose exec` (same
+  container) or the `openclaw-setup` one-shot service (stable hostname) —
+  random-hostname writers corrupt the state check.
+- **Config.** Doctor owns the live copy (migrations, `meta.*`, skills state).
+  Project keys go in via `python scripts/setup.py`, single tweaks via
+  `config set`. Never edit the live copy by hand, never mount `openclaw.json`
+  as a file.
+- **Volumes.** `/home/node/.openclaw` and browser profiles are named volumes
+  (Windows binds break Doctor); workspace stays bind-mounted (plain markdown).
+- **Env needs recreate.** `docker compose restart` does not reload environment;
+  use `up -d --force-recreate <service>`.

@@ -19,8 +19,8 @@ does not reload environment.
 
 ## Live config keys (volume `openclaw-home`, no tracked file)
 
-Flow: `scripts/bootstrap.sh` applies the project key set (additive, idempotent;
-`--check` shows drift) → restart gateway. Single tweaks: `config set <path> <value>`.
+Flow: `python scripts/setup.py` applies the project key set (additive, idempotent;
+`--check` shows drift, keys defined in `scripts/desired-config.json`) → restart gateway. Single tweaks: `config set <path> <value>`.
 The live copy is doctor-managed (not in git; inspect via
 `docker compose exec openclaw-gateway cat /home/node/.openclaw/openclaw.json`).
 There is intentionally no tracked config file — full-file syncs clobber Doctor keys.
@@ -29,7 +29,7 @@ There is intentionally no tracked config file — full-file syncs clobber Doctor
 |---|---|
 | `gateway.mode/bind/port` | `local` / `lan` / `18789` (fresh volumes need `gateway.mode local` seeded once — see tutorial step 2) |
 | `browser.noSandbox` | required for Chromium in containers |
-| `models.providers.9router` | `baseUrl` (inter-container `http://9router:20128/v1`), `apiKey: ${NINE_ROUTER_API_KEY}` (use placeholder to boot fresh, then real key), `api: openai-completions`, `request.allowPrivateNetwork: true`, `models: [{id, name}]` (e.g. `jobclaw-free`; empty array is rejected) |
+| `models.providers.9router` | `baseUrl` (inter-container `http://9router:20128/v1`), `apiKey` (SecretRef `${env:NINE_ROUTER_API_KEY}` resolved from container env at runtime — bare `${VAR}` never resolves; `setup.py` writes the ref form, never plaintext), `api: openai-completions`, `request.allowPrivateNetwork: true`, `models: [{id, name}]` (e.g. `jobclaw-free`; empty array is rejected) |
 | `agents.defaults.model.primary` | e.g. `9router/jobclaw-free` (combo name is the model id) |
 | `agents.defaults.modelPolicy.allow` | refs the gateway may use — job `--model` overrides must be listed |
 | `agents.defaults.workspace` | `/home/node/.openclaw/workspace` |
@@ -42,7 +42,7 @@ There is intentionally no tracked config file — full-file syncs clobber Doctor
 
 | Service | Image / build | Ports | Volumes |
 |---|---|---|---|
-| `9router` | `decolua/9router:0.5.95`, `DATA_DIR=/app/data` | `20128:20128` | `./data/9router-data:/app/data` |
+| `9router` | `decolua/9router:0.5.104`, `DATA_DIR=/app/data` | `20128:20128` | `./data/9router-data:/app/data` |
 | `openclaw-gateway` | built from `Dockerfile.gateway` (upstream + Chromium), stable `hostname: jobclaw-openclaw` | `18789:18789` | `openclaw-home` → `/home/node/.openclaw`, `openclaw-workspace` bind → `/home/node/.openclaw/workspace`, `browser-profiles` → `/home/node/.openclaw/browser-profiles` |
 | `openclaw-cli` | upstream image, profile `cli`, `network_mode: service:openclaw-gateway`, entrypoint `node openclaw.mjs` | — | same home volume + workspace bind |
 

@@ -1,6 +1,7 @@
 .env
 data/
 *.log
+.setup-cache.json
 openclaw-workspace/resume.md
 openclaw-workspace/DREAMS.md
 openclaw-workspace/memory/*
