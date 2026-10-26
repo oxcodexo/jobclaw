@@ -1,16 +1,17 @@
 # Tutorial: getting started (A to Z)
 
 Follow this page once, top to bottom. It takes roughly 30–45 minutes, most of it waiting on
-downloads and dashboard clicks. By the end, job digests arrive in your Telegram every morning.
+downloads. By the end, JobClaw answers in the OpenClaw Control UI and, if you enabled it,
+Telegram.
 
 ## 0. What you need before starting
 
 - **Docker** 24+ with the Compose plugin: `docker --version` and `docker compose version`.
-- A **Telegram** account.
-- A free **Tavily** account (for web search): sign up at `tavily.com`, copy the API key
-  from the dashboard (`tvly-...`, free tier is 1,000 credits/month).
+- **Python** 3.9+ (`python --version`; on some systems the command is `python3`).
 - A **resume as RenderCV YAML** (`resume.yaml`). Keep passwords and ID numbers out of it — free
   model providers may log prompts (see [free-tier limits](../explanation/free-tier-limits.md)).
+- Optional: a **Telegram** account and a **Tavily** key (`tvly-...`, 1,000 free credits/month).
+  Setup can leave either or both disabled; you can enable them later by rerunning setup.
 - Patience for first-time image pulls (1–2 GB).
 
 > This system is **human-in-the-loop by design**: the agent finds, scores and drafts. YOU
@@ -18,55 +19,49 @@ downloads and dashboard clicks. By the end, job digests arrive in your Telegram 
 > terms and gets accounts permanently banned. Details in
 > [free-tier limits](../explanation/free-tier-limits.md).
 
-## 1. Clone and configure secrets
+## 1. Clone and run guided setup
 
 ```bash
 git clone https://github.com/oxcodexo/jobclaw.git jobclaw
 cd jobclaw
-cp .env.example .env
-```
-
-Edit `.env` (values come from later steps — fill in as you go):
-
-| Variable | Where you get it |
-|---|---|
-| `OPENCLAW_GATEWAY_TOKEN` | invent a long random string |
-| `TELEGRAM_BOT_TOKEN` | BotFather (step 4) |
-| `TELEGRAM_ALLOWED_CHAT_IDS` | @userinfobot (step 4) |
-| `NINE_ROUTER_PASSWORD` | invent a strong password (step 3) |
-| `NINE_ROUTER_API_KEY` | 9Router dashboard endpoint key (step 3) |
-| `TAVILY_API_KEY` | Tavily dashboard (prerequisite above) |
-| `TZ` | your timezone, e.g. `Africa/Casablanca` |
-
-Sanity check that secrets stay out of git (should print nothing tracked):
-
-```bash
-git status --porcelain
-git check-ignore .env openclaw-workspace/resume.yaml data && echo "secrets ignored OK"
-```
-
-## 2. Start the stack (one command)
-
-Same command on PowerShell, CMD, Git Bash, macOS, Linux (needs Python 3.9+,
-Docker 24+ with the Compose plugin). First run pulls images and builds a small
-Chromium layer — 5–10 minutes, mostly waiting. The script also creates `.env`
-from `.env.example` (random tokens), checks upstream versions, seeds
-`gateway.mode` on fresh volumes, waits for `gateway ready`, applies the project
-config, and restarts:
-
-```bash
 python scripts/setup.py
 ```
 
-Preview without writes, or check version pins against upstream:
+You do **not** need to copy or hand-edit `.env` first. Setup creates it from `.env.example`,
+generates the gateway token and 9Router password when they are placeholders, and preserves
+comments and existing values on later runs.
+
+Setup walks you through:
+
+1. **Stack version.** Two supported presets only:
+   - **Validated** (default, recommended): OpenClaw `2026.9.9` + 9Router `0.5.104`.
+   - **Latest**: the newest stable upstream pair with published images.
+2. **Telegram (optional).** Allowlist with numeric user IDs (recommended), pairing, or
+   disabled. Setup writes the channel config; you never edit `openclaw.json`.
+3. **Web search (optional).** Tavily, key-free DuckDuckGo (experimental), or disabled. Setup
+   installs the matching plugin when needed.
+
+Then it performs the rest automatically:
+
+- builds the gateway image (upstream OpenClaw + Chromium + RenderCV),
+- starts 9Router on the named volume `jobclaw-9router-data`,
+- logs in to 9Router, creates or reuses the `jobclaw` API key, and writes it to `.env`,
+- probes the no-auth OpenCode models and creates the `jobclaw-free` combo,
+- stops the gateway, seeds/applies the OpenClaw config, installs the selected search plugin,
+- recreates the gateway once and waits for `gateway ready`,
+- runs a real `9router/jobclaw-free` inference smoke test.
+
+Same commands work on PowerShell, CMD, Git Bash, macOS, and Linux. Useful variants:
 
 ```bash
 python scripts/setup.py --check            # drift vs desired keys, no writes
-python scripts/setup.py --check-versions   # pinned vs newest 9Router/OpenClaw, no writes
+python scripts/setup.py --check-versions   # current / validated / latest + image availability
+python scripts/setup.py --verify           # per-member chat probe of the 9Router combo
+python scripts/setup.py --latest           # preselect Latest (confirms interactively)
+python scripts/setup.py --yes              # accept defaults, keep integrations, no prompts
+python scripts/setup.py --offline          # skip version metadata network calls
 ```
 
-It also creates two named volumes (`jobclaw-openclaw-home`,
-`jobclaw-browser-profiles`) — runtime home lives there, not in `./data/`.
 Expected state afterwards:
 
 ```bash
@@ -74,6 +69,13 @@ docker compose ps
 # jobclaw-9router    Up (healthy)   0.0.0.0:20128->20128/tcp
 # jobclaw-openclaw   Up             0.0.0.0:18789->18789/tcp
 ```
+
+| Storage | What lives there |
+|---|---|
+| `jobclaw-openclaw-home` | OpenClaw state, live config, sessions, pairing |
+| `jobclaw-browser-profiles` | persistent Chromium profiles |
+| `jobclaw-9router-data` | 9Router DB: providers, combos, API keys, settings |
+| `openclaw-workspace/` (bind) | tracked prompts plus your resume, queue and applied log |
 
 Key URLs (all local):
 
@@ -83,84 +85,88 @@ Key URLs (all local):
 | OpenClaw Control UI | http://127.0.0.1:18789 |
 | OpenClaw ↔ 9Router (internal) | http://9router:20128/v1 |
 
-## 3. Wire free models in 9Router
-
-Full walkthrough: [free models via 9Router](../how-to/free-models-9router.md). Short version:
-
-1. Open http://127.0.0.1:20128, log in with `NINE_ROUTER_PASSWORD` from `.env`.
-2. **Providers** → connect **Kiro AI** (OAuth via AWS Builder ID / Google / GitHub —
-   ~50 credits/month free) and **OpenCode Free** (one click, no auth).
-3. **Combo** → create `jobclaw-free`, add free models with the most reliable first
-   (Kiro non-thinking models if OpenCode Free 403s for you — verify each member
-   answers a real chat call, not just appears in `/v1/models`; details in the
-   [full walkthrough](../how-to/free-models-9router.md#3-build-the-combo-combo-page)).
-   Keep `-thinking` variants last — they burn credits fast.
-4. **Endpoint / API keys** → create key (e.g. name `openclaw`), copy it into `.env` as
-   `NINE_ROUTER_API_KEY` (replacing the `placeholder-change-me...` boot value).
-5. Apply and prove inference (listing is not proof — each member must answer):
+## 2. Prove the install
 
 ```bash
-docker compose up -d --force-recreate openclaw-gateway   # .env changed: recreate, not restart
-python scripts/setup.py --verify
+python scripts/setup.py --check      # every desired key should say OK
+python scripts/setup.py --verify     # each combo member must answer a tiny chat call
 ```
 
-## 4. Connect Telegram
+`--check` compares `.env`-derived desired config against the live volume. `--verify` logs in to
+9Router, reads the `jobclaw-free` combo, and sends a real chat request to each member. It also
+reads `/v1/models`, but that listing is advisory because it can lag new OpenCode slugs; a model
+that merely appears there is not proof.
 
-Full walkthrough: [Telegram setup](../how-to/telegram-setup.md). Short version:
+## 3. Optional: Kiro fallback
 
-1. Chat with **@BotFather** → `/newbot` → save the token into `.env` as `TELEGRAM_BOT_TOKEN`.
+The default free lane needs no provider account. If you want a second pool:
+
+1. Open http://127.0.0.1:20128 and log in with `NINE_ROUTER_PASSWORD` from `.env`.
+2. **Providers** → **Kiro AI** → OAuth with AWS Builder ID (free), Google, or GitHub
+   (≈50 credits/month). Tool calls through Kiro can be flaky.
+3. If you add Kiro models to `jobclaw-free`, verify each one and put the most reliable first.
+   Keep `-thinking` variants last; they burn credits fast.
+
+Credentials persist in `jobclaw-9router-data`: restarts and recreates never require OAuth
+again.
+
+## 4. Optional: Telegram
+
+Setup already wrote the Telegram config if you chose allowlist or pairing. If you skipped it,
+rerun `python scripts/setup.py` and keep the defaults you want.
+
+1. **@BotFather** → `/newbot` → save the token.
 2. Open `t.me/<your-bot>` → **Start**, send `hi`.
-3. Get your numeric chat ID (message **@userinfobot**, or Bot API `getUpdates` on your own
-   bot) → `.env` as `TELEGRAM_ALLOWED_CHAT_IDS`.
-4. Recreate the gateway (`.env` changed — plain `restart` would keep the old
-   environment), message the bot again, approve pairing:
+3. Get your **numeric user ID** (message **@userinfobot**, or Bot API `getUpdates` on your own
+   bot). That is the ID of a person allowed to DM the bot; setup asks for user IDs, not group/chat
+   IDs.
+4. Rerun setup. For allowlist mode, message the bot from an allowed account. For pairing mode,
+   approve the first DM:
 
 ```bash
-docker compose up -d --force-recreate openclaw-gateway
-# (send any message to the bot first)
 docker compose exec openclaw-gateway node openclaw.mjs pairing list telegram
 docker compose exec openclaw-gateway node openclaw.mjs pairing approve telegram <CODE>
 ```
 
-> Run state-changing CLI commands with `docker compose exec` (same container).
-> Rule of thumb: `.env` changed → `up -d --force-recreate`; config changed →
-> `restart`; neither works → `ps` + `logs --tail 30` first.
+Full walkthrough, including failure modes: [Telegram setup](../how-to/telegram-setup.md).
 
-## 5. Enable Tavily search
+## 5. Optional: web search
 
-Full walkthrough: [Tavily search](../how-to/tavily-search.md). Short version (key already in
-`.env`, plugin entry applied by `python scripts/setup.py`):
+Tavily is the reliable discovery path; DuckDuckGo is experimental, and disabled search stays
+explicit. Rerun `python scripts/setup.py` to change the choice. Setup installs the plugin and
+applies the conditional search keys; if the plugin install fails, setup prints the exact retry
+command and exits non-zero without rolling back the stack.
+
+Verify the plugin is visible:
 
 ```bash
-docker compose up -d --force-recreate openclaw-gateway
-# wait ~60s for boot, then:
-docker compose exec openclaw-gateway node openclaw.mjs plugins install @openclaw/tavily-plugin
 docker compose exec openclaw-gateway node openclaw.mjs skills check | grep -i tavily
 ```
 
+More: [Tavily search](../how-to/tavily-search.md).
+
 ## 6. Drop in your resume and profile
 
-1. Get your resume into `openclaw-workspace/resume.yaml` (gitignored — never
-   committed). Three ways, pick one:
+1. Get your resume into `openclaw-workspace/resume.yaml` (gitignored — never committed). Three
+   ways, pick one:
    - Copy your RenderCV master (or start from `resume.yaml.example`), or
-   - Ask JobClaw in chat: *"here's my resume"* + upload (PDF, DOCX, TXT, MD,
-     YAML) — it reads the file and builds `resume.yaml` for you, or
+   - Ask JobClaw in chat: *"here's my resume"* + upload (PDF, DOCX, TXT, MD, YAML) — it reads
+     the file and builds `resume.yaml` for you, or
    - Paste your resume text in chat and ask it to structure it.
 2. Fill `openclaw-workspace/USER.md` (replace the `YOUR_*` placeholders: roles, skills,
    location, salary floor, links, timezone). The agent also infers from the resume.
 
 ## 7. Chat with JobClaw (everything is on demand)
 
-Open the Control UI (`http://127.0.0.1:18789`) or Telegram and talk to the
-agent. Start with:
+Open the Control UI (`http://127.0.0.1:18789`) or Telegram and talk to the agent. Start with:
 
-- *"Find new AI Engineer / Full-Stack postings, remote or Morocco, posted
-  within 7 days."* — deep search with posting-date evidence, keepers
-  (70+) queued to `jobs/queue/` with score, why-fit, tailored cover letter.
-- *"Tailor my resume for <job URL>."* — JD analysis, tailored `resume.yaml`
-  + PDF beside the queue draft, marked draft until you approve.
-- *"Cover letter for <job>"*, *"interview prep for <job>"*,
-  *"digest"* (queue summary), *"log applied <job>"*.
+- *"Find new AI Engineer / Full-Stack postings, remote or Morocco, posted within 7 days."* —
+  deep search with posting-date evidence, keepers (70+) queued to `jobs/queue/` with score,
+  why-fit, tailored cover letter.
+- *"Tailor my resume for <job URL>."* — JD analysis, tailored `resume.yaml` + PDF beside the
+  queue draft, marked draft until you approve.
+- *"Cover letter for <job>"*, *"interview prep for <job>"*, *"digest"* (queue summary),
+  *"log applied <job>"*.
 - Paste any job URL anytime: *"Score this and draft a cover letter."*
 
 See [daily workflow](../how-to/daily-workflow.md) for all flows.
@@ -173,17 +179,23 @@ Ask for a fresh search in chat, then check the queue:
 ls openclaw-workspace/jobs/queue/
 ```
 
-You should get drafts in `jobs/queue/` (plus tailored resume PDFs beside
-them). Review a draft, apply from your own browser, and tell the bot what
-you sent so it stays tracked.
+You should get drafts in `jobs/queue/` (plus tailored resume PDFs beside them). Review a draft,
+apply from your own browser, and tell the bot what you sent so it stays tracked.
 
 ## 9. When something breaks
 
 - `docker compose ps` + `docker compose logs --tail 30 openclaw-gateway` first.
 - `python scripts/setup.py --check` (config drift) and `--verify` (inference path).
+- `python scripts/setup.py` repairs setup-owned state idempotently: it reuses an existing
+  `jobclaw` key/combo and only fills a missing or empty combo.
+- 9Router login reset and destructive fallbacks: [rotate secrets](../how-to/rotate-secrets.md).
+- Do not run `--force-recreate` by hand as a first response. Setup handles the gateway
+  recreate automatically; see [configuration](../reference/configuration.md) for when a
+  manual recreate is actually needed.
 
 ## Next steps
 
 - [Daily workflow](../how-to/daily-workflow.md) — how to live with the system.
 - [Configuration reference](../reference/configuration.md) — every knob.
+- [Update and back up](../how-to/update.md) — presets, volume backups, downgrade caveats.
 - [Free-tier limits](../explanation/free-tier-limits.md) — quotas and ban risks you must know.

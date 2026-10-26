@@ -1,9 +1,10 @@
 # OpenClaw gateway + headless Chromium for agent browsing (job boards are JS-heavy)
 # + RenderCV (resume PDF builds via the rendercv agent skill).
 # Rebuild after upstream updates: docker compose up -d --build openclaw-gateway
-# Pinned base for reproducibility; float with:
+# The base image has no default here on purpose: set OPENCLAW_BASE in .env
+# (written by scripts/setup.py). Manual overrides are an unsupported escape hatch.
 #   docker compose build --build-arg OPENCLAW_BASE=ghcr.io/openclaw/openclaw:<tag> openclaw-gateway
-ARG OPENCLAW_BASE=ghcr.io/openclaw/openclaw:2026.9.9
+ARG OPENCLAW_BASE
 FROM ${OPENCLAW_BASE}
 
 USER root
@@ -18,8 +19,17 @@ USER node
 # under /home/node and stay readable at runtime. uv fetches its own
 # Python 3.14 (base image only has 3.11); pin matches the proven personal
 # setup: rendercv[full]==2.8.
+#
+# Download the installer to a file first and retry transient DNS/network
+# failures: piping curl into sh can turn a temporary resolver blip into an
+# opaque "uv: not found" build failure.
 ENV PATH="/home/node/.local/bin:${PATH}" \
     UV_TOOL_BIN_DIR="/home/node/.local/bin"
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh \
-  && uv tool install --python 3.14 "rendercv[full]==2.8" \
+RUN curl -fLsS --retry 5 --retry-delay 2 --retry-all-errors \
+      https://astral.sh/uv/install.sh -o /tmp/uv-install.sh \
+  && sh /tmp/uv-install.sh \
+  && rm -f /tmp/uv-install.sh \
+  && uv --version
+
+RUN uv tool install --python 3.14 "rendercv[full]==2.8" \
   && rendercv --version

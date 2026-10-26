@@ -6,20 +6,22 @@ syntax; read explanations to understand *why* the system is built this way.
 
 ## Tutorials (learn by doing)
 
-- [Getting started](tutorials/getting-started.md) — the full A-to-Z path: clone, configure,
-  start the stack, connect Telegram, wire free models, run your first job scan. Follow it once,
+- [Getting started](tutorials/getting-started.md) — the full A-to-Z path: clone, run guided
+  setup, optionally connect Telegram and web search, run your first job scan. Follow it once,
   in order.
 
 ## How-to guides (specific goals)
 
-- [Set up Telegram](how-to/telegram-setup.md) — BotFather, chat ID, pairing approval.
-- [Wire free models via 9Router](how-to/free-models-9router.md) — dashboard: providers, combo,
-  endpoint key.
-- [Enable Tavily web search](how-to/tavily-search.md) — API key, plugin install, verification.
+- [Set up Telegram](how-to/telegram-setup.md) — optional; BotFather, numeric user IDs,
+  allowlist vs pairing.
+- [Wire free models via 9Router](how-to/free-models-9router.md) — automatic key/combo
+  provisioning, named-volume persistence, verification, troubleshooting.
+- [Enable Tavily web search](how-to/tavily-search.md) — optional; API key, automatic plugin
+  install, verification, DuckDuckGo/disabled alternatives.
 - [Daily workflow](how-to/daily-workflow.md) — review queue, apply from your browser, track sends,
   paste links on demand.
 - [Rotate or revoke secrets](how-to/rotate-secrets.md) — what to do when a token leaks.
-- [Update and back up](how-to/update.md) — pull new images, back up state, restore.
+- [Update and back up](how-to/update.md) — choose a preset, back up volumes, restore.
 
 ## Reference (exact facts)
 

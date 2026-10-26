@@ -2,18 +2,19 @@ name: jobclaw
 
 # OpenClaw Gateway + 9Router.
 # Live config lives in the openclaw-home volume, managed additively via
-# scripts/setup.py (desired keys in scripts/desired-config.json) and `config set` (single tweaks).
+# scripts/setup.py (always-on keys in scripts/desired-config.json; Telegram and
+# web-search keys are added from .env markers) and `config set` for single tweaks.
 # The gateway/Doctor own the live copy (migrations, wizard/meta/skills state).
 # Named volumes (not binds) for runtime home: required on Windows.
-# NOTE: never file-mount openclaw.json — configure via setup.py / config set.
+# NOTE: never file-mount openclaw.json - configure via setup.py / config set.
 # - ./openclaw-workspace      -> /home/node/.openclaw/workspace (AGENTS.md, resume.yaml, jobs/)
-# - ./data/9router-data    -> /app/data (9router db.json, combos, keys)
+# - 9router-data volume       -> /app/data (9Router DB: providers, combos, keys, settings)
 # Inter-container model endpoint: http://9router:20128/v1
 # Host access: OpenClaw http://127.0.0.1:18789, 9Router http://127.0.0.1:20128
 
 services:
   9router:
-    image: ${NINE_ROUTER_IMAGE:-decolua/9router:0.5.104}
+    image: ${NINE_ROUTER_IMAGE:?set NINE_ROUTER_IMAGE in .env}
     container_name: jobclaw-9router
     hostname: jobclaw-9router
     restart: unless-stopped
@@ -23,14 +24,15 @@ services:
       - PORT=20128
       - HOSTNAME=0.0.0.0
       - DATA_DIR=/app/data
-      # Dashboard password (default 123456 must be changed for non-localhost access)
-      - INITIAL_PASSWORD=${NINE_ROUTER_PASSWORD:-}
+      # Seeds a database with no stored password hash. The volume keeps the hash
+      # after the first boot, so changing this alone does not rotate a password.
+      - INITIAL_PASSWORD=${NINE_ROUTER_PASSWORD:?set NINE_ROUTER_PASSWORD in .env}
     volumes:
-      - ./data/9router-data:/app/data
+      - 9router-data:/app/data
     networks:
       - jobclaw
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:20128/v1/models"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:20128/api/health"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -41,7 +43,7 @@ services:
       context: .
       dockerfile: Dockerfile.gateway
       args:
-        OPENCLAW_BASE: ${OPENCLAW_BASE:-ghcr.io/openclaw/openclaw:2026.9.9}
+        OPENCLAW_BASE: ${OPENCLAW_BASE:?set OPENCLAW_BASE in .env}
     # Local tag (base + chromium). Rebuild with: docker compose up -d --build openclaw-gateway
     image: jobclaw-openclaw:latest
     container_name: jobclaw-openclaw
@@ -55,18 +57,18 @@ services:
     environment:
       - TZ=${TZ:-UTC}
       - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN:?set in .env}
-      # Telegram pairing (gateway reads these; no secrets committed)
+      # Telegram (optional; setup writes the channel config)
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
       - TELEGRAM_ALLOWED_CHAT_IDS=${TELEGRAM_ALLOWED_CHAT_IDS:-}
-      # 9Router endpoint key (created in 9Router dashboard -> pasted into .env)
+      # 9Router endpoint key (provisioned by setup)
       - NINE_ROUTER_API_KEY=${NINE_ROUTER_API_KEY:-}
-      # Tavily web search (free 1000 credits/mo) - auto-detected by OpenClaw
+      # Tavily web search (optional; setup installs the plugin)
       - TAVILY_API_KEY=${TAVILY_API_KEY:-}
     volumes:
       # Live runtime home as NAMED VOLUME (required on Windows).
       # Configure via python scripts/setup.py (fresh volumes) or config set (tweaks).
       - openclaw-home:/home/node/.openclaw
-      # Versioned workspace (AGENTS.md, resume.yaml, jobs/, skills/ — tracked except resume.yaml)
+      # Versioned workspace (AGENTS.md, resume.yaml, jobs/, skills/ - tracked except resume.yaml)
       - ./openclaw-workspace:/home/node/.openclaw/workspace
       # Persistent Chromium profiles (named volume, same reason)
       - browser-profiles:/home/node/.openclaw/browser-profiles
@@ -74,7 +76,7 @@ services:
       - jobclaw
 
   # One-shot CLI sharing the gateway network namespace (doctor, config, dashboard URL).
-  # Same built image as the gateway (version parity — never drift against shared state).
+  # Same built image as the gateway (version parity - never drift against shared state).
   # Requires the image to exist: fresh clones run docker compose build first.
   openclaw-cli:
     image: jobclaw-openclaw:latest
@@ -88,9 +90,9 @@ services:
     entrypoint: ["node", "openclaw.mjs"]
 
   # One-shot setup (stable hostname, same home volume as the gateway).
-  # Used by scripts/setup.py to seed fresh volumes with the gateway stopped.
+  # Used by scripts/setup.py to seed fresh volumes and apply config with the gateway stopped.
   # Usage: docker compose run --rm openclaw-setup <openclaw args>
-  # (entrypoint is already `node openclaw.mjs` — do NOT prefix it again).
+  # (entrypoint is already `node openclaw.mjs` - do NOT prefix it again).
   openclaw-setup:
     image: jobclaw-openclaw:latest
     profiles: ["setup"]
@@ -113,3 +115,5 @@ volumes:
     name: jobclaw-openclaw-home
   browser-profiles:
     name: jobclaw-browser-profiles
+  9router-data:
+    name: jobclaw-9router-data

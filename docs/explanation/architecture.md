@@ -18,11 +18,12 @@ You (host Firefox) — the only place Apply/Send is ever clicked
   (57+ tools), skills, SQLite state. It owns all decisions; it never submits applications.
 - **9Router** is a local model router, not an LLM. One OpenAI-compatible endpoint, provider
   combos with fallback, per-endpoint API keys. The combo name *is* the model id
-  (`jobclaw-free`).
-- **Webchat + Telegram** are the channels: you chat, JobClaw answers.
+  (`jobclaw-free`). Setup creates/reuses the `jobclaw` key and fills the combo automatically;
+  its database lives in the named volume `jobclaw-9router-data`.
+- **Webchat + Telegram** are the channels: you chat, JobClaw answers. Telegram is optional.
 - **Tavily** is the discovery backbone: `tavily_search` (basic, ≤5) finds postings,
   `tavily_extract` reads them server-side — including JS-rendered pages the container
-  browser cannot reach.
+  browser cannot reach. DuckDuckGo (experimental) and disabled search are the alternatives.
 - **RenderCV** (baked into the gateway image) renders tailored resume PDFs from YAML.
 
 ## Why search-first (the key design decision)
@@ -54,5 +55,9 @@ ephemeral chat sessions.
   as a file.
 - **Volumes.** `/home/node/.openclaw` and browser profiles are named volumes
   (Windows binds break Doctor); workspace stays bind-mounted (plain markdown).
+  9Router state is a third named volume (`jobclaw-9router-data`), so providers,
+  keys, combos and OAuth survive restarts and recreates. Setup repairs missing
+  setup-owned state at run time; there is no guardian/sidecar.
 - **Env needs recreate.** `docker compose restart` does not reload environment;
-  use `up -d --force-recreate <service>`.
+  use `up -d --force-recreate <service>` after a manual `.env` edit. Setup does
+  this automatically as part of its own flow.

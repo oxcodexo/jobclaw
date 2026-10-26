@@ -2,10 +2,10 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-A self-hosted AI career expert: **OpenClaw** agent + **9Router** free-model routing + **Tavily**
-search + **RenderCV** resume builds + **Telegram** chat, all in Docker. It finds new postings,
-scores them against your resume, tailors your resume per job as PDF, and drafts cover
-letters — and it **never applies on your behalf**
+A self-hosted AI career expert: **OpenClaw** agent + **9Router** free-model routing +
+optional **Tavily** search + **RenderCV** resume builds + optional **Telegram** chat, all in
+Docker. It finds new postings, scores them against your resume, tailors your resume per job as
+PDF, and drafts cover letters — and it **never applies on your behalf**
 (human-in-the-loop; auto-applying gets accounts banned — see
 [free-tier limits](docs/explanation/free-tier-limits.md)).
 
@@ -21,23 +21,29 @@ in your own browser, you tell the bot what went out.
 ## Quickstart
 
 ```bash
-git clone https://github.com/oxcodexo/jobclaw.git jobclaw && cd jobclaw
-cp .env.example .env   # then fill secrets (see below)
-docker compose up -d
+git clone https://github.com/oxcodexo/jobclaw.git jobclaw
+cd jobclaw
+python scripts/setup.py
 ```
+
+The guided setup creates `.env`, generates secrets, lets you choose **Validated** (default)
+or **Latest** versions, asks about optional Telegram and web search, then builds the gateway,
+starts 9Router, provisions its API key and `jobclaw-free` combo automatically, applies the
+OpenClaw config, recreates the gateway, and runs a real inference smoke test.
 
 Full A-to-Z path: **[docs/tutorials/getting-started.md](docs/tutorials/getting-started.md)**.
 Start there — this README is the map, the tutorial is the road.
 
-## What you need (free tiers)
+## What you need
 
-- Docker 24+ with Compose
-- Telegram account (bot via BotFather — free)
-- 9Router free providers: Kiro AI (~50 credits/mo) + OpenCode Free (see
-  [free models](docs/how-to/free-models-9router.md))
-- Tavily key (1,000 free credits/mo — see [Tavily setup](docs/how-to/tavily-search.md))
-- Your resume as RenderCV YAML (`openclaw-workspace/resume.yaml`, gitignored, never committed —
-  copy your master or start from `resume.yaml.example`)
+- Docker 24+ with Compose and Python 3.9+
+- A **resume as RenderCV YAML** (`openclaw-workspace/resume.yaml`, gitignored, never
+  committed — copy your master or start from `resume.yaml.example`)
+- Optional: a Telegram account (bot via BotFather — free)
+- Optional: a Tavily key (1,000 free credits/mo; DuckDuckGo fallback or disabled search also
+  supported)
+- Optional: Kiro AI for extra free-model fallback (~50 credits/mo). The default 9Router
+  OpenCode Free lane needs no account.
 
 ## Docs
 
@@ -52,7 +58,7 @@ Start there — this README is the map, the tutorial is the road.
 
 ## Safety rules (non-negotiable)
 
-1. `.env`, `data/`, `resume.yaml`, queue drafts and `applied.json` are gitignored — verify
+1. `.env`, `resume.yaml`, queue drafts and `applied.json` are gitignored — verify
    with `git status` before every commit.
 2. The agent drafts only. (See [platform risks](docs/explanation/free-tier-limits.md).)
 3. Free models may log prompts — keep IDs/passwords out of `resume.yaml`.

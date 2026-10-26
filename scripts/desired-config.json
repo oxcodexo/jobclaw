@@ -17,9 +17,5 @@
   "agents.defaults.model.primary": "9router/jobclaw-free",
   "agents.defaults.modelPolicy.allow": [
     "9router/jobclaw-free"
-  ],
-  "channels.telegram.enabled": true,
-  "channels.telegram.dmPolicy": "pairing",
-  "plugins.entries.tavily.enabled": true,
-  "tools.web.search.provider": "tavily"
+  ]
 }
