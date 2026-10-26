@@ -153,14 +153,15 @@ More: [Tavily search](../how-to/tavily-search.md).
    - Ask JobClaw in chat: *"here's my resume"* + upload (PDF, DOCX, TXT, MD, YAML) — it reads
      the file and builds `resume.yaml` for you, or
    - Paste your resume text in chat and ask it to structure it.
-2. Fill `openclaw-workspace/USER.md` (replace the `YOUR_*` placeholders: roles, skills,
-   location, salary floor, links, timezone). The agent also infers from the resume.
+2. Fill `openclaw-workspace/USER.md` (setup seeds it from `USER.md.example` if missing; replace
+   the `YOUR_*` placeholders: roles, skills, location, salary floor, links, timezone). The agent
+   also infers from the resume.
 
 ## 7. Chat with JobClaw (everything is on demand)
 
 Open the Control UI (`http://127.0.0.1:18789`) or Telegram and talk to the agent. Start with:
 
-- *"Find new AI Engineer / Full-Stack postings, remote or Morocco, posted within 7 days."* —
+- *"Find new AI Engineer / Full-Stack postings, remote or my region, posted within 7 days."* —
   deep search with posting-date evidence, keepers (70+) queued to `jobs/queue/` with score,
   why-fit, tailored cover letter.
 - *"Tailor my resume for <job URL>."* — JD analysis, tailored `resume.yaml` + PDF beside the

@@ -4,6 +4,8 @@
 *.log
 .setup-cache.json
 openclaw-workspace/resume.yaml
+openclaw-workspace/USER.md
+openclaw-workspace/MEMORY.md
 openclaw-workspace/DREAMS.md
 openclaw-workspace/memory/*
 openclaw-workspace/jobs/queue/*

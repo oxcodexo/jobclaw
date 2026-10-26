@@ -4,7 +4,7 @@ JobClaw is interactive. You chat from the web UI or Telegram.
 
 ## Find new jobs
 
-Ask in chat: *"Find new AI Engineer postings, remote or Morocco, posted
+Ask in chat: *"Find new AI Engineer postings, remote or my region, posted
 within 7 days."* Every suggestion carries posting-date evidence; anything
 without a date is reported, never queued. Keepers (score 70+) land in
 `openclaw-workspace/jobs/queue/` with score, why-fit, tailored cover letter,

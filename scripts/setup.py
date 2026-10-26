@@ -46,6 +46,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DESIRED_PATH = os.path.join(ROOT, "scripts", "desired-config.json")
 ENV_PATH = os.path.join(ROOT, ".env")
 ENV_EXAMPLE = os.path.join(ROOT, ".env.example")
+WORKSPACE_DIR = os.path.join(ROOT, "openclaw-workspace")
 
 VALIDATED_OPENCLAW_TAG = "2026.9.9"
 VALIDATED_NINE_ROUTER_TAG = "0.5.104"
@@ -586,6 +587,21 @@ def load_env_state(generate: bool = False) -> Dict[str, str]:
     # Keep a copy for callers that want to know what changed.
     env["__original__"] = json.dumps(before)
     return env
+
+
+def ensure_workspace_files() -> None:
+    """Seed local-only workspace files from tracked examples (never overwrite)."""
+    for name in ("USER.md", "MEMORY.md"):
+        live = os.path.join(WORKSPACE_DIR, name)
+        example = live + ".example"
+        if os.path.exists(live):
+            continue
+        if not os.path.exists(example):
+            raise SetupError(
+                f"missing openclaw-workspace/{name}.example - cannot seed {name}"
+            )
+        shutil.copyfile(example, live)
+        log(f"created openclaw-workspace/{name} from {name}.example")
 
 
 def infer_markers(env: Dict[str, str], live: Optional[dict] = None) -> Dict[str, str]:
@@ -1815,7 +1831,7 @@ def print_summary(env: Dict[str, str], plugin: Optional[str], plugin_ok: bool, s
     log("    - Optional Kiro OAuth: 9Router dashboard -> Providers -> Kiro AI.")
     log("      Credentials persist in jobclaw-9router-data; no re-login after restarts.")
     log("    - Resume: openclaw-workspace/resume.yaml (copy resume.yaml.example if missing).")
-    log("    - Profile: fill openclaw-workspace/USER.md placeholders.")
+    log("    - Profile: fill openclaw-workspace/USER.md (seeded from USER.md.example if missing).")
     if truthy(env.get("TELEGRAM_ENABLED")) and is_real_secret(
         env.get("TELEGRAM_BOT_TOKEN")
     ):
@@ -1994,6 +2010,7 @@ def cmd_verify() -> int:
 def cmd_full(offline: bool, latest: bool, yes: bool) -> int:
     need_tool("docker")
     env = load_env_state(generate=True)
+    ensure_workspace_files()
     live = read_live_config_for_inference()
     env = infer_markers(env, live)
 

@@ -27,7 +27,7 @@ writes atomically. Secrets are never printed.
 
 | Variable | Required | Purpose |
 |---|---|---|
-| `TZ` | no | container timezone, default `UTC` (example: `Africa/Casablanca`) |
+| `TZ` | no | container timezone, default `UTC` (example: `Europe/London`) |
 | `OPENCLAW_PORT` / `NINE_ROUTER_PORT` | no | host ports, defaults `18789` / `20128` |
 | `OPENCLAW_BASE` | yes | gateway base image, e.g. `ghcr.io/openclaw/openclaw:2026.9.9`. Written by setup; there is no Dockerfile or Compose default |
 | `OPENCLAW_GATEWAY_TOKEN` | yes | gateway auth token. Setup generates one if missing/placeholder |

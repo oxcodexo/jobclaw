@@ -13,8 +13,10 @@ jobclaw/
 ├── openclaw-workspace/       # bind-mounted as the agent workspace
 │   ├── AGENTS.md             # agent operating instructions (injected every session)
 │   ├── SOUL.md / IDENTITY.md # persona
-│   ├── USER.md               # YOUR profile (placeholders in template)
-│   ├── MEMORY.md             # long-term memory seed
+│   ├── USER.md               # YOUR profile (gitignored — copy from USER.md.example)
+│   ├── USER.md.example       # sanitized profile template
+│   ├── MEMORY.md             # long-term memory (gitignored — copy from MEMORY.md.example)
+│   ├── MEMORY.md.example     # memory seed template
 │   ├── resume.yaml           # YOUR working master, RenderCV (gitignored — copy from resume.yaml.example)
 │   ├── resume.yaml.example   # sanitized shape reference
 │   ├── skills/               # agent skills (rendercv + career suite, versioned)
@@ -52,8 +54,9 @@ Back up volumes with the commands in [update](../how-to/update.md).
   the live file consistent with Doctor state.
 - **Named volumes for runtime state.** This is required on Windows, where bind-mounted state
   breaks Doctor, and it keeps SQLite/OAuth state off the tracked tree.
-- **Workspace is live *and* tracked.** `openclaw-workspace/` holds both versioned prompt files
-  (`AGENTS.md`, …) and your private runtime (`resume.yaml`, queue, applied log). `.gitignore`
+- **Workspace mixes tracked prompts with local state.** `openclaw-workspace/` holds versioned
+  prompt files (`AGENTS.md`, `SOUL.md`, `IDENTITY.md`, skills) and private runtime files
+  (`USER.md`, `MEMORY.md`, `resume.yaml`, queue, applied log) that are gitignored. `.gitignore`
   draws the line — check it after any change.
 - **Runtime names match the repo**: containers `jobclaw-9router` / `jobclaw-openclaw`, network
   `jobclaw-net`, image `jobclaw-openclaw:latest`, hostnames likewise. Stable hostnames matter

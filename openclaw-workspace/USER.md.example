@@ -1,4 +1,6 @@
-# USER.md — your profile (the agent reads this + resume.md to judge fit)
+# USER.md — your profile (the agent reads this + resume.yaml to judge fit)
+
+<!-- Copy this template to USER.md. The live USER.md is gitignored and must never be committed. -->
 
 - Name: YOUR NAME
 - Target roles: e.g. Full-Stack Developer, AI/ML Developer, LLM Engineer
@@ -12,13 +14,11 @@
   - GitHub: https://github.com/YOU
   - LinkedIn: https://linkedin.com/in/YOU
 - Telegram chat ID: YOUR_TELEGRAM_CHAT_ID (numeric, from @userinfobot)
-- Timezone: e.g. Africa/Casablanca (must match cron --tz)
+- Timezone: e.g. Etc/UTC
 
 ## Preferences
 - Strong preference: e.g. AI/LLM/agent work, RAG systems
 - Languages: e.g. English (professional), French, Arabic
 - Avoid: e.g. pure frontend, pure DevOps without development
 
-> The agent fills gaps by inferring from resume.md. It only asks you when confidence < 60%.
-> NOTE: this file lives in your live workspace (bind-mounted). It is tracked by git
-> in this template — replace the placeholders before your first run.
+> The agent fills gaps by inferring from resume.yaml. It only asks you when confidence < 60%.

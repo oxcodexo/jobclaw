@@ -113,5 +113,5 @@ grep -rnE "tvly-|sk-[A-Za-z0-9_-]{10,}" --exclude-dir=.git \
 ```
 
 `.env` (and its atomic temp files, `.env.*`), `openclaw-workspace/resume.yaml`,
-queue drafts and `applied.json` are all gitignored — confirm with `git check-ignore <path>`
-after any repo change.
+`openclaw-workspace/USER.md`, `openclaw-workspace/MEMORY.md`, queue drafts and `applied.json` are
+all gitignored — confirm with `git check-ignore <path>` after any repo change.

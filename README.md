@@ -58,8 +58,8 @@ Start there — this README is the map, the tutorial is the road.
 
 ## Safety rules (non-negotiable)
 
-1. `.env`, `resume.yaml`, queue drafts and `applied.json` are gitignored — verify
-   with `git status` before every commit.
+1. `.env`, `openclaw-workspace/USER.md`, `openclaw-workspace/MEMORY.md`, `resume.yaml`, queue
+   drafts and `applied.json` are gitignored — verify with `git status` before every commit.
 2. The agent drafts only. (See [platform risks](docs/explanation/free-tier-limits.md).)
 3. Free models may log prompts — keep IDs/passwords out of `resume.yaml`.
 

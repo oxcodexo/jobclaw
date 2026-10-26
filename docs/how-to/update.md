@@ -104,8 +104,8 @@ if the current state matters.
 ## Git hygiene for this repo
 
 - Commit tracked config/workspace/docs changes normally.
-- Before every commit: `git status --porcelain` — `.env`, `resume.yaml`, queue drafts and
-  `applied.json` must never appear. If one does, stop and fix `.gitignore`.
+- Before every commit: `git status --porcelain` — `.env`, `resume.yaml`, `USER.md`, `MEMORY.md`,
+  queue drafts and `applied.json` must never appear. If one does, stop and fix `.gitignore`.
 - Config edits flow one way into the volume: `python scripts/setup.py` for the project key
   set, `config set` for single tweaks, then apply with `python scripts/setup.py --one-shot`.
   Never hand-edit the live copy in the volume (doctor rewrites it).
